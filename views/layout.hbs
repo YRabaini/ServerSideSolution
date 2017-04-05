@@ -13,6 +13,9 @@
             <li><a href="/log-user">Sign in!</a></li>
         </ul>
 		<hr>
+        {{#if errMessage}}
+            <h1>{{this}}</h1>
+        {{/if}}
 		{{{body}}}
 	</body>
 </html>

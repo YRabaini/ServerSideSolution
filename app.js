@@ -1,6 +1,7 @@
 var express = require('express')
 var bodyParser = require('body-parser')
 var sqlite3 = require('sqlite3')
+var session = require('express-session')
 
 var db = new sqlite3.Database("./db/movie-friends.db")
 
@@ -108,20 +109,22 @@ app.post("/create-user", function(request, response){
 	   }
         
         for (i=0; i < rows.length ; i++) {
-            if (rows[i].username == newUser.userName) {
+            if (rows[i].username == newUser.username) {
                 flag = 1
+                var error = "This username already exists"
+                response.redirect("/")
                 // ERROR
             }        
         }
         
-	   // Store the human.
+	   // Store the user.
         if (flag == 0)
             {
-                db.run("INSERT INTO movie(id,year,title) VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
+                db.run("INSERT INTO users VALUES (?,?,?)", newUser.id, newUser.username, newUser.password)
                 response.redirect("/")
             }
             
-            
+   
     })
 	
 })
@@ -148,13 +151,12 @@ app.post("/log-user", function(request, response){
         }
         
 	   // check for mdp
-        if (flag == 0) {
-                //ERREUR, mauvais mdp ou login
-            }
+        if (flag == 0)
+            response.redirect("/", {errMessage: "Username or Password is wrong"})
         else {
-            // good
+            // good, create cookie
+            response.redirect("/")
         }
-        response.redirect("/")
     
             
     })
