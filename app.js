@@ -94,47 +94,70 @@ app.post("/create-movie", function(request, response){
 })
 
 app.get("/create-user", function(request, response){
-	response.render('create-movie', {})
+	response.render('create-user', {})
 })
 
 app.post("/create-user", function(request, response){
     db.all("select * from users", function(err, rows){        
-/*
         var flag = 0
     
-        newMovie = {
+        newUser = {
 	   	id: rows.length,
-	   	year: parseInt(request.body.year),
-	   	title: request.body.title
+	   	username: request.body.username,
+	   	password: request.body.password
 	   }
         
         for (i=0; i < rows.length ; i++) {
-            if (rows[i].title.toLowerCase() == newMovie.title.toLowerCase() && rows[i].year == newMovie.year) {
-                newMovie.id = rows[i].id
+            if (rows[i].username == newUser.userName) {
                 flag = 1
+                // ERROR
             }        
         }
-        console.log(newMovie, flag)
         
-        var newRating = {
-            movie_id: newMovie.id,
-            rating: parseInt(request.body.rating)
-        }
-	   
 	   // Store the human.
         if (flag == 0)
-            db.run("INSERT INTO movie(id,year,title) VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
-	   
-        // db push that shiet
-        db.run("INSERT INTO rating(movie_id, rating) VALUES (?,?)", newRating.movie_id, newRating.rating)
-
-        response.redirect("/movies/"+newMovie.id)
+            {
+                db.run("INSERT INTO movie(id,year,title) VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
+                response.redirect("/")
+            }
+            
             
     })
 	
-*/
 })
 
+app.get("/log-user", function(request, response){
+	response.render('log-user', {})
+})
 
-
+app.post("/log-user", function(request, response){
+    db.all("select * from users", function(err, rows){        
+        var flag = 0
+    
+        newUser = {
+	   	id: rows.length,
+	   	username: request.body.username,
+	   	password: request.body.password
+	   }
+        
+        for (i=0; i < rows.length ; i++) {
+            if (rows[i].username == newUser.userName && rows[i].password == newUser.password) {
+                flag = 1
+                // PAS ERREUR, MDP OKAY
+            }        
+        }
+        
+	   // check for mdp
+        if (flag == 0) {
+                //ERREUR, mauvais mdp ou login
+            }
+        else {
+            // good
+        }
+        response.redirect("/")
+    
+            
+    })
+	
+})
 app.listen(8000)
