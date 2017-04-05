@@ -1,8 +1,8 @@
-var app = require('express')
+var express = require('express')
 var bodyParser = require('body-parser')
-require('sqlite3')
+var sqlite3 = require('sqlite3')
 
-db = 
+var db = new sqlite3.Database("./db/movie-friends.db")
 
 var app = express()
 
@@ -16,21 +16,21 @@ app.set('view engine', 'hbs')
 var db = new sqlite3.Database("./db/movie-friends.db")
 
 var movies = [
-    {id: 1, year: 2001, title: "Shrek"},
-    {id: 2, year: 1995, title: "Dumb & Dumber"},
-    {id: 3, year: 1994, title: "The Lion King"}
+    {id: 0, year: 2001, title: "Shrek"},
+    {id: 1, year: 1995, title: "Dumb & Dumber"},
+    {id: 2, year: 1994, title: "The Lion King"}
 ]
 
 var ratings = [
-    {movie_id: 1, rating: 5},
-    {movie_id: 1, rating: 4},
+    {movie_id: 0, rating: 5},
+    {movie_id: 0, rating: 4},
     {movie_id: 2, rating: 3},
-    {movie_id: 3, rating: 0}
+    {movie_id: 1, rating: 0}
 ]
 
 
 app.get("/", function(request, response){
-	response.render('/movies', {movies: movies})
+	response.render('movies', {movies: movies})
 })
 
 app.get("/movies/:id", function(request, response){
@@ -51,22 +51,20 @@ app.post("/create-movie", function(request, response){
 		year: parseInt(request.body.year)
 	}
     
-    
-    
-    for (i=1; i <= movies.length ; i++) {
+    for (i=0; i < movies.length ; i++) {
         if (movies[i].title.toLowerCase() == newMovie.title.toLowerCase() && movies[i].year == newMovie.year) {
             newMovie.id = movies[i].id
             flag = 1
         }        
     }
     
-    var newRating {
-        movie_id = newMovie.id,
-        rating = parseInt(request.body.rating)
+    var newRating = {
+        movie_id: newMovie.id,
+        rating: parseInt(request.body.rating)
     }
 	
 	// Store the human.
-    if flag == 0
+    if (flag == 0)
 	   movies.push(newMovie)
 	
     ratings.push(newRating)
