@@ -8,10 +8,15 @@ var movies = [
 ]
 
 var ratings = [
-    {movie_id: 0, rating: 5},
-    {movie_id: 0, rating: 4},
-    {movie_id: 1, rating: 3},
-    {movie_id: 2, rating: 0}
+    {movie_id: 0, rating: 5, by_user_id: 1},
+    {movie_id: 0, rating: 4, by_user_id: 1},
+    {movie_id: 1, rating: 3, by_user_id: 1},
+    {movie_id: 2, rating: 0, by_user_id: 1}
+]
+
+var users = [
+    {user_id: 0, username: "admin", password: "admin"},
+    {user_id: 1, username: "yanice", password: "yanice"}
 ]
 
 ///////////////////////////// DELETE BEFORE THIS /////////////////////
@@ -53,10 +58,24 @@ db.serialize(function(){
                 var fillRating = db.prepare("INSERT INTO rating VALUES (?,?)")
                 
                 for (i=0; i < ratings.length ; i++) {
-                    if (ratings[i].movie_id != null, ratings[i].rating != null)
+                    if (ratings[i].movie_id != null, ratings[i].rating != null, ratings[i].by_user_id != null)
                         fillRating.run(ratings[i].movie_id, ratings[i].rating)
                 }
             fillRating.finalize()    
+        }        
+    })
+    
+       db.run("CREATE TABLE if not exists users (user_id INT UNIQUE PRIMARY KEY, username TEXT UNIQUE, password TEXT)", function(err) {
+        if (err)
+            console.log(err.message)
+        else {
+                var fillUser = db.prepare("INSERT INTO users VALUES (?,?,?)")
+                
+                for (i=0; i < users.length ; i++) {
+                    if (users[i].user_id != null, users[i].username != null, users[i].password != null)
+                        fillUser.run(users[i].user_id, users[i].username, users[i].password)
+                }
+            fillUser.finalize()    
         }        
     })
 })  

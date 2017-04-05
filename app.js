@@ -98,9 +98,8 @@ app.get("/create-user", function(request, response){
 })
 
 app.post("/create-user", function(request, response){
-    
-    
-    db.all("select * from movie", function(err, rows){        
+    db.all("select * from users", function(err, rows){        
+/*
         var flag = 0
     
         newMovie = {
@@ -133,6 +132,7 @@ app.post("/create-user", function(request, response){
             
     })
 	
+*/
 })
 
 
