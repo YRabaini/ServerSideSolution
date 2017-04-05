@@ -30,6 +30,7 @@ var ratings = [
 
 
 app.get("/", function(request, response){
+    // push un truc de la db ici
 	response.render('movies', {movies: movies})
 })
 
@@ -38,14 +39,9 @@ app.get("/movies/:id", function(request, response){
 //	var rating = []
     
     db.all("select rating from rating where rating.movie_id = ?", id, function(err, rows){
-        console.log(rows[0].rating)
+        console.log("Taken from DB", rows)
         response.render('movie', {movies: movies[id], rows: rows})
     })
-/*1
-        for (i=0; i < ratings.length ; i++) {
-            if (ratings[i].movie_id == id)
-                rating.push(ratings[i].rating)
-*/
 })
 
 app.get("/create-movie", function(request, response){
@@ -55,15 +51,26 @@ app.get("/create-movie", function(request, response){
 app.post("/create-movie", function(request, response){
 	
     var flag = 0
-	var newMovie = {
-		id: movies.length,
+    rowsRetrieved= []
+    
+    db.all("select * from movie", function(err, rows){
+        for (i=0 ; i < rows.length ; i++)
+            rowsRetrieved.push(rows[i])
+    })
+    
+    console.log(rowsRetrieved)
+    
+    var newMovie = {
+		id: rowsRetrieved.length,
 		title: request.body.title,
 		year: parseInt(request.body.year)
 	}
-    
-    for (i=0; i < movies.length ; i++) {
-        if (movies[i].title.toLowerCase() == newMovie.title.toLowerCase() && movies[i].year == newMovie.year) {
-            newMovie.id = movies[i].id
+
+    for (i=0; i < rowsRetrieved.length ; i++) {
+        console.log(rowsRetrieved[i])
+        if (rowsRetrieved[i].title.toLowerCase() == newMovie.title.toLowerCase() && rowsRetrieved[i].year == newMovie.year) {
+            console.log(rowsRetrieved[i])
+            newMovie.id = rowsRetrieved[i].id
             flag = 1
         }        
     }
@@ -74,10 +81,14 @@ app.post("/create-movie", function(request, response){
     }
 	
 	// Store the human.
-    if (flag == 0)
+    if (flag == 0) {
 	   movies.push(newMovie)
+        // include dbpush
+    }
 	
+    // db push that shiet
     ratings.push(newRating)
+    
 
     response.redirect("/movies/"+newMovie.id)
 	
