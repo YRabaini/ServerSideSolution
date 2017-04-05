@@ -35,13 +35,17 @@ app.get("/", function(request, response){
 
 app.get("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
-	var rating = []
+//	var rating = []
     
-    for (i=0; i < ratings.length ; i++) {
-        if (ratings[i].movie_id == id)
-            rating.push(ratings[i].rating)
-    }
-    response.render('movie', {movies: movies[id], rating: rating})
+    db.all("select rating from rating where rating.movie_id = ?", id, function(err, rows){
+        console.log(rows[0].rating)
+        response.render('movie', {movies: movies[id], rows: rows})
+    })
+/*1
+        for (i=0; i < ratings.length ; i++) {
+            if (ratings[i].movie_id == id)
+                rating.push(ratings[i].rating)
+*/
 })
 
 app.get("/create-movie", function(request, response){

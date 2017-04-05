@@ -5,8 +5,8 @@
 	<div>Year: {{movies.year}}</div>
     <h2>Ratings</h2>
     <ul>
-        {{#each rating}}
-                <li>{{this}} </li>
+        {{#each rows}}
+                <li>{{this.rating}} </li>
         {{/each}}
     </ul>
 {{else}}
