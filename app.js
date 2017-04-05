@@ -35,7 +35,13 @@ app.get("/", function(request, response){
 
 app.get("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
-	response.render('movie', {movie: movies[id]})
+	var rating = []
+    
+    for (i=0; i < ratings.length ; i++) {
+        if (ratings[i].movie_id == id)
+            rating.push(ratings[i].rating)
+    }
+    response.render('movie', {movies: movies[id], rating: rating})
 })
 
 app.get("/create-movie", function(request, response){
