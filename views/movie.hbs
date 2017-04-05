@@ -1,8 +1,8 @@
 <h1>Movie</h1>
-{{#if movies}}
-	<div>Id: {{movies.id}}</div>
-	<div>Title: {{movies.title}}</div>
-	<div>Year: {{movies.year}}</div>
+{{#if movie}}
+	<div>Id: {{this.id}}</div>
+	<div>Title: {{this.title}}</div>
+	<div>Year: {{this.year}}</div>
     <h2>Ratings</h2>
     <ul>
         {{#each rows}}

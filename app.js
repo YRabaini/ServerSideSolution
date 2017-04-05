@@ -31,16 +31,22 @@ var ratings = [
 
 app.get("/", function(request, response){
     // push un truc de la db ici
-	response.render('movies', {movies: movies})
+      db.all("select * from movie", function(err, rows){
+
+	   response.render('movies', {rows: rows})
+      })
+	
 })
 
 app.get("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
 //	var rating = []
     
-    db.all("select rating from rating where rating.movie_id = ?", id, function(err, rows){
-        console.log("Taken from DB", rows)
-        response.render('movie', {movies: movies[id], rows: rows})
+    db.all("select * from movie where movie.id = ?", id, function(err, movieRows){     
+        db.all("select rating from rating where rating.movie_id = ?", id, function(err, rows){
+            console.log(movieRows)
+            response.render('movie', {movie: movieRows[0], rows: rows})
+        })
     })
 })
 
@@ -49,48 +55,83 @@ app.get("/create-movie", function(request, response){
 })
 
 app.post("/create-movie", function(request, response){
-	
-    var flag = 0
-    rowsRetrieved= []
+    
     
     db.all("select * from movie", function(err, rows){
-        for (i=0 ; i < rows.length ; i++)
-            rowsRetrieved.push(rows[i])
+        
+        var flag = 0
+    
+        newMovie = {
+	   	id: rows.length,
+	   	year: parseInt(request.body.year),
+	   	title: request.body.title
+	   }
+        
+        for (i=0; i < rows.length ; i++) {
+            if (rows[i].title.toLowerCase() == newMovie.title.toLowerCase() && rows[i].year == newMovie.year) {
+                newMovie.id = rows[i].id
+                flag = 1
+            }        
+        }
+        console.log(newMovie, flag)
+        
+        var newRating = {
+            movie_id: newMovie.id,
+            rating: parseInt(request.body.rating)
+        }
+	   
+	   // Store the human.
+        if (flag == 0)
+            db.run("INSERT INTO movie(id,year,title) VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
+	   
+        // db push that shiet
+        db.run("INSERT INTO rating(movie_id, rating) VALUES (?,?)", newRating.movie_id, newRating.rating)
+
+        response.redirect("/movies/"+newMovie.id)
+            
     })
-    
-    console.log(rowsRetrieved)
-    
-    var newMovie = {
-		id: rowsRetrieved.length,
-		title: request.body.title,
-		year: parseInt(request.body.year)
-	}
-
-    for (i=0; i < rowsRetrieved.length ; i++) {
-        console.log(rowsRetrieved[i])
-        if (rowsRetrieved[i].title.toLowerCase() == newMovie.title.toLowerCase() && rowsRetrieved[i].year == newMovie.year) {
-            console.log(rowsRetrieved[i])
-            newMovie.id = rowsRetrieved[i].id
-            flag = 1
-        }        
-    }
-    
-    var newRating = {
-        movie_id: newMovie.id,
-        rating: parseInt(request.body.rating)
-    }
 	
-	// Store the human.
-    if (flag == 0) {
-	   movies.push(newMovie)
-        // include dbpush
-    }
-	
-    // db push that shiet
-    ratings.push(newRating)
-    
+})
 
-    response.redirect("/movies/"+newMovie.id)
+app.get("/create-user", function(request, response){
+	response.render('create-movie', {})
+})
+
+app.post("/create-user", function(request, response){
+    
+    
+    db.all("select * from movie", function(err, rows){        
+        var flag = 0
+    
+        newMovie = {
+	   	id: rows.length,
+	   	year: parseInt(request.body.year),
+	   	title: request.body.title
+	   }
+        
+        for (i=0; i < rows.length ; i++) {
+            if (rows[i].title.toLowerCase() == newMovie.title.toLowerCase() && rows[i].year == newMovie.year) {
+                newMovie.id = rows[i].id
+                flag = 1
+            }        
+        }
+        console.log(newMovie, flag)
+        
+        var newRating = {
+            movie_id: newMovie.id,
+            rating: parseInt(request.body.rating)
+        }
+	   
+	   // Store the human.
+        if (flag == 0)
+            db.run("INSERT INTO movie(id,year,title) VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
+	   
+        // db push that shiet
+        db.run("INSERT INTO rating(movie_id, rating) VALUES (?,?)", newRating.movie_id, newRating.rating)
+
+        response.redirect("/movies/"+newMovie.id)
+            
+    })
 	
 })
 
