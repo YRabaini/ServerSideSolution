@@ -1,0 +1,14 @@
+<h1>Movie</h1>
+{{#if movies}}
+	<div>Id: {{movies.id}}</div>
+	<div>Title: {{movies.title}}</div>
+	<div>Year: {{movies.year}}</div>
+    <h2>Ratings</h2>
+    <ul>
+        {{#each movieRating}}
+                <li>{{this}} </li>
+        {{/each}}
+    </ul>
+{{else}}
+	<p>No movie with the given id exists.</p>
+{{/if}}
