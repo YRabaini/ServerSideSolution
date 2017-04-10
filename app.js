@@ -13,6 +13,23 @@ app.set('view engine', 'hbs')
 
 var db = new sqlite3.Database("./db/movie-friends.db")
 
+
+///// CHUNK CODE SESSION
+
+app.use(session({
+    resave: false,
+    saveUninitialized: true,
+    secret: "my-salt"
+}))
+
+
+app.use(function(request, response, next) {
+    response.locals.session = request.session.user
+    next()
+})
+
+///////////////
+
 app.get("/", function(request, response){
     // push un truc de la db ici
       db.all("select * from movie", function(err, rows){
@@ -78,6 +95,8 @@ app.post("/create-user", function(request, response){
         if (rows.length == 0) {
             db.all("select * from users", function(err, rows2){
                 db.run("INSERT INTO users VALUES (?, ?,?)", rows2.length, request.body.username, request.body.password)
+                var newUser = {id: request.body.username, password: request.body.password }
+                request.session.user = newUser
                 response.redirect('/')
             })
         }
@@ -99,10 +118,15 @@ app.post("/log-user", function(request, response){
             response.render("/log-user", {error: "Username or password is wrong"})
         }
         else {
+            var newUser = {id: request.body.username, password: request.body.password }
+            request.session.user = newUser
             reponse.redirect("/")
         }   
     })
 })
 
+app.post("/logout", function(request, response){
+    request.session = null
+})
 
 app.listen(8000)

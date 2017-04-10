@@ -9,8 +9,13 @@
         <ul>
             <li><a href="/">Start</a></li>
             <li><a href="/about">About</a></li>
-            <li><a href="/create-user">Sign up!</a></li>
-            <li><a href="/log-user">Sign in!</a></li>
+            {{#if session}}
+                <li><a href="/logout">Sign out!</a></li>
+                <li><a href="/log-user">Rate Movie!</a></li>
+            {{else}}
+                <li><a href="/create-user">Sign up!</a></li>
+                <li><a href="/log-user">Sign in!</a></li>
+            {{/if}}
         </ul>
 		<hr>
 		{{{body}}}
