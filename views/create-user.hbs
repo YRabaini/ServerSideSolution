@@ -1,4 +1,7 @@
 <h1>Sign up</h1>
+{{#if error}}
+    <h2>{{error}}</h2>
+{{/if}}
 <form action="/create-user" method="post">
 	<div>Username:  <input type="text" name="username" required></div>
 	<div>Password:  <input type="password" name="pass" required></div>

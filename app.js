@@ -4,31 +4,14 @@ var sqlite3 = require('sqlite3')
 var session = require('express-session')
 
 var db = new sqlite3.Database("./db/movie-friends.db")
-
 var app = express()
 
 // This middleware enables us to use request.body to read data from forms with
 // method="POST".
 app.use(bodyParser.urlencoded({extended: false}))
-
-// This setting tells express that we use handlebars as our view engine.
 app.set('view engine', 'hbs')
 
 var db = new sqlite3.Database("./db/movie-friends.db")
-
-var movies = [
-    {id: 0, year: 2001, title: "Shrek"},
-    {id: 1, year: 1995, title: "Dumb & Dumber"},
-    {id: 2, year: 1994, title: "The Lion King"}
-]
-
-var ratings = [
-    {movie_id: 0, rating: 5},
-    {movie_id: 0, rating: 4},
-    {movie_id: 2, rating: 3},
-    {movie_id: 1, rating: 0}
-]
-
 
 app.get("/", function(request, response){
     // push un truc de la db ici
@@ -57,7 +40,7 @@ app.get("/create-movie", function(request, response){
 
 app.post("/create-movie", function(request, response){
     
-    
+    // redo en propre avec un query pour trouve les truc submit et do the same pour le user 
     db.all("select * from movie", function(err, rows){
         
         var flag = 0
@@ -99,32 +82,18 @@ app.get("/create-user", function(request, response){
 })
 
 app.post("/create-user", function(request, response){
-    db.all("select * from users", function(err, rows){        
-        var flag = 0
-    
-        newUser = {
-	   	id: rows.length,
-	   	username: request.body.username,
-	   	password: request.body.password
-	   }
+    db.all("select * from users where users.username = ?", request.body.username, function(err, rows){
         
-        for (i=0; i < rows.length ; i++) {
-            if (rows[i].username == newUser.username) {
-                flag = 1
-                var error = "This username already exists"
-                response.redirect("/")
-                // ERROR
-            }        
+        if (rows.length == 0) {
+            db.all("select * from users", function(err, rows2){
+                db.run("INSERT INTO users VALUES (?, ?,?)", rows2.length, request.body.username, request.body.password)
+                response.redirect('/')
+            })
         }
         
-	   // Store the user.
-        if (flag == 0)
-            {
-                db.run("INSERT INTO users VALUES (?,?,?)", newUser.id, newUser.username, newUser.password)
-                response.redirect("/")
-            }
-            
-   
+        else {
+            response.render('create-user.hbs', {error: "User already exists."})
+        }    
     })
 	
 })
@@ -134,32 +103,16 @@ app.get("/log-user", function(request, response){
 })
 
 app.post("/log-user", function(request, response){
-    db.all("select * from users", function(err, rows){        
-        var flag = 0
-    
-        newUser = {
-	   	id: rows.length,
-	   	username: request.body.username,
-	   	password: request.body.password
-	   }
-        
-        for (i=0; i < rows.length ; i++) {
-            if (rows[i].username == newUser.userName && rows[i].password == newUser.password) {
-                flag = 1
-                // PAS ERREUR, MDP OKAY
-            }        
+    db.all("select * from users where users.username = ? and users.password = ?", request.body.username, request.body.password, function(err, rows){        
+       
+        if (rows.length == 0) {
+            response.render("/log-user", {error: "Username or password is wrong"})
         }
-        
-	   // check for mdp
-        if (flag == 0)
-            response.redirect("/", {errMessage: "Username or Password is wrong"})
         else {
-            // good, create cookie
-            response.redirect("/")
-        }
-    
-            
+            reponse.redirect("/")
+        }   
     })
-	
 })
+
+
 app.listen(8000)

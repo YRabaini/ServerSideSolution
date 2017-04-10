@@ -6,7 +6,7 @@ var movies = [
     {id: 1, year: 1995, title: "Dumb & Dumber"},
     {id: 2, year: 1994, title: "The Lion King"}
 ]
-
+// ADD BY_USER_ID TO DB WHEN USER SESSION IS DONE
 var ratings = [
     {movie_id: 0, rating: 5, by_user_id: 1},
     {movie_id: 0, rating: 4, by_user_id: 1},
@@ -56,7 +56,7 @@ db.serialize(function(){
             console.log(err.message)
         else {
                 var fillRating = db.prepare("INSERT INTO rating VALUES (?,?)")
-                
+                // RAJOUTE VALUE USER_ID AFTER USER SESSION IS DONE
                 for (i=0; i < ratings.length ; i++) {
                     if (ratings[i].movie_id != null, ratings[i].rating != null, ratings[i].by_user_id != null)
                         fillRating.run(ratings[i].movie_id, ratings[i].rating)
