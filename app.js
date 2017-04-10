@@ -120,13 +120,15 @@ app.post("/log-user", function(request, response){
         else {
             var newUser = {id: request.body.username, password: request.body.password }
             request.session.user = newUser
-            reponse.redirect("/")
+            response.redirect("/")
         }   
     })
 })
 
-app.post("/logout", function(request, response){
-    request.session = null
+
+app.get("/logout", function(request, response){
+    request.session.destroy(function(){})
+    response.redirect('/')
 })
 
 app.listen(8000)
