@@ -41,37 +41,28 @@ app.get("/create-movie", function(request, response){
 app.post("/create-movie", function(request, response){
     
     // redo en propre avec un query pour trouve les truc submit et do the same pour le user 
-    db.all("select * from movie", function(err, rows){
+    db.all("select * from movie where lower(movie.title) = ? and lower(movie.year) = ?", request.body.title.toLowerCase(), request.body.year.toLowerCase(), function(err, rows){
         
-        var flag = 0
-    
-        newMovie = {
-	   	id: rows.length,
-	   	year: parseInt(request.body.year),
-	   	title: request.body.title
-	   }
-        
-        for (i=0; i < rows.length ; i++) {
-            if (rows[i].title.toLowerCase() == newMovie.title.toLowerCase() && rows[i].year == newMovie.year) {
-                newMovie.id = rows[i].id
-                flag = 1
-            }        
+        if (rows.length == 0) {
+             db.all("select * from movie", function(err, rows2){
+                 newMovie = {
+                     id: rows2.length,
+                     year: parseInt(request.body.year),
+                     title: request.body.title
+                 }
+                db.run("INSERT INTO movie(id,year,title) VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
+                db.run("INSERT INTO rating(movie_id, rating) VALUES (?,?)", newMovie.movie_id, request.body.rating)
+                
+                response.redirect("/movies/"+newMovie.id)
+ 
+             })
         }
-        console.log(newMovie, flag)
-        
-        var newRating = {
-            movie_id: newMovie.id,
-            rating: parseInt(request.body.rating)
-        }
-	   
-	   // Store the human.
-        if (flag == 0)
-            db.run("INSERT INTO movie(id,year,title) VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
-	   
-        // db push that shiet
-        db.run("INSERT INTO rating(movie_id, rating) VALUES (?,?)", newRating.movie_id, newRating.rating)
+        else {
+            console.log(rows)
+            db.run("INSERT INTO rating(movie_id, rating) VALUES (?,?)", rows[0].id, request.body.rating)
 
-        response.redirect("/movies/"+newMovie.id)
+            response.redirect("/movies/"+rows[0].id)
+        }
             
     })
 	
@@ -104,7 +95,6 @@ app.get("/log-user", function(request, response){
 
 app.post("/log-user", function(request, response){
     db.all("select * from users where users.username = ? and users.password = ?", request.body.username, request.body.password, function(err, rows){        
-       
         if (rows.length == 0) {
             response.render("/log-user", {error: "Username or password is wrong"})
         }
