@@ -99,8 +99,7 @@ app.post("/create-user", function(request, response){
                 request.session.user = newUser
                 response.redirect('/')
             })
-        }
-        
+        } 
         else {
             response.render('create-user.hbs', {error: "User already exists."})
         }    
@@ -113,12 +112,13 @@ app.get("/log-user", function(request, response){
 })
 
 app.post("/log-user", function(request, response){
-    db.all("select * from users where users.username = ? and users.password = ?", request.body.username, request.body.password, function(err, rows){        
-        if (rows.length == 0) {
-            response.render("/log-user", {error: "Username or password is wrong"})
-        }
+    db.all("select * from users where username = ? and password = ?", request.body.username, request.body.password, function(err, rows){
+        
+        if (rows.length == 0)
+            response.render("log-user.hbs", {error: "Username or password is wrong"}) 
         else {
             var newUser = {id: request.body.username, password: request.body.password }
+            console.log(newUser)
             request.session.user = newUser
             response.redirect("/")
         }   
