@@ -1,4 +1,7 @@
 <h1>Welcome Admin!</h1>
+{{#if error}}
+    <h2>{{error}}</h2>
+{{/if}}
 {{#each user}}
     <form action="/delete_rating" method="post">
 	   <div><a href="/movies/{{id}}">{{title}}</a></div>

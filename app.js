@@ -76,6 +76,7 @@ app.post("/delete_rating", function(request, response){
                 db.run("DELETE from movie where id=?", movieId)
                 response.redirect("/")
             }
+            response.render('admin.hbs', {error: "Rating deleted!"})
         })
 })
 
