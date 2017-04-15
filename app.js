@@ -55,12 +55,28 @@ app.get("/movies/:id", function(request, response){
 app.post("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
     
-    db.run("DELETE from rating where rating.movie_id=? and rating.user_id=?", id, request.session.user.id)
-    db.all("select * from rating where rating.movie_id=?", id, function(err,rows){
-      if (rows.length == 0)
-          db.run("DELETE from movie where id=?", id)
-    response.redirect("/my_page")
-    })
+        db.run("DELETE FROM rating WHERE rating.movie_id=? AND rating.user_id=?", id, request.session.user.id)
+        db.all("select * from rating where rating.movie_id=?", id, function(err,rows){
+            if (rows.length == 0) {
+                db.run("DELETE from movie where id=?", id)
+                response.redirect("/my_page")
+            }
+        })
+})
+
+// DELETE BY ADMIN
+
+app.post("/delete_rating", function(request, response){
+	var userId = request.body.userid
+    var movieId = request.body.movieid
+        console.log(movieId)
+        db.run("DELETE FROM rating WHERE rating.movie_id=? AND rating.user_id=?", movieId, userId)
+        db.all("select * from rating where rating.movie_id=?", movieId, function(err,rows){
+            if (rows.length == 0) {
+                db.run("DELETE from movie where id=?", movieId)
+                response.redirect("/")
+            }
+        })
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +138,7 @@ app.post("/create-user", function(request, response){
             console.log(hashPass)
             db.all("select * from users", function(err, rows2){
                 db.run("INSERT INTO users VALUES (?, ?, ?)", rows2.length, request.body.username, hashPass)
-                var newUser = {id: rows2.length, username: request.body.username, password: hashPass }
+                var newUser = {id: rows2.length, username: request.body.username, password: hashPass, role: "limited" }
                 // GIVE READER AND WRITERS ROLES
                 db.run("INSERT INTO roleMembers VALUES (?, ?)", newUser.id, 1)
                 db.run("INSERT INTO roleMembers VALUES (?, ?)", newUser.id, 2)
@@ -147,12 +163,16 @@ app.get("/log-user", function(request, response){
 
 app.post("/log-user", function(request, response){
     db.all("select * from users where username = ?", request.body.username, function(err, rows){
-        if (hash.verify(request.body.password, rows[0].password)) {        
-                var newUser = {id: rows[0].user_id, username: request.body.username, password: rows[0].password }
-                console.log(newUser)
-                request.session.user = newUser
-                console.log(request.session.user.id)
-                response.redirect("/")
+        if (hash.verify(request.body.password, rows[0].password)) {     
+                // Account is good, nowcheck for rights
+                db.get("SELECT role_id from roleMembers where memberId=?", rows[0].user_id, function(err, rows2){
+                    if (rows2.role_id == 0)
+                        var newUser = {id: rows[0].user_id, username: request.body.username, password: rows[0].password, role: "admin" }
+                    else
+                        var newUser = {id: rows[0].user_id, username: request.body.username, password: rows[0].password, role: "limited" }
+                    request.session.user = newUser
+                    response.redirect("/")
+                })
         }   
         else
             response.render("log-user.hbs", {error: "Username or password is wrong"}) 
@@ -186,9 +206,19 @@ app.get("/user/:id", function(request, response){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get("/my_page", function(request, response){
-    db.all("SELECT * from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id AND users.username = ?", request.session.user.username, function(err, rows){
-        response.render("my_page.hbs", {user: rows})
+    db.all("SELECT movie.title, movie.id, rating.rating, users.user_id from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id AND users.username = ?", request.session.user.username, function(err, rows){
+        response.render("my_page.hbs", {user: rows})        
     })
+})
+
+app.get("/admin", function(request, response){
+  
+        if (request.session.user.role != "admin")
+            response.status(403).send("ERROR 403: Unauthorized Acces! You can't come here buddy :(")   
+        
+        db.all("SELECT movie.title, movie.id, rating.rating, rating.user_id, users.user_id from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id", function(err, rows){
+            response.render("admin.hbs", {user: rows})
+        })
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

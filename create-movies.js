@@ -10,7 +10,6 @@ var movies = [
 // ADD BY_USER_ID TO DB WHEN USER SESSION IS DONE
 var ratings = [
     {movie_id: 0, rating: 5, user_id: 1},
-    {movie_id: 0, rating: 4, user_id: 1},
     {movie_id: 1, rating: 3, user_id: 1},
     {movie_id: 2, rating: 0, user_id: 1}
 ]
