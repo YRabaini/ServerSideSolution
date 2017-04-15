@@ -1,4 +1,5 @@
 var sqlite3 = require('sqlite3')
+var hash = require('password-hash')
 
 // DATA - DELETE AFTER - THIS IS FOR PROJECT DEBUG PURPOSE
 var movies = [
@@ -15,8 +16,8 @@ var ratings = [
 ]
 
 var users = [
-    {user_id: 0, username: "admin", password: "admin"},
-    {user_id: 1, username: "yanice", password: "yanice"}
+    {user_id: 0, username: "admin", password: hash.generate("admin")},
+    {user_id: 1, username: "yanice", password: hash.generate("yanice")}
 ]
 
 ///////////////////////////// DELETE BEFORE THIS /////////////////////
