@@ -32,7 +32,6 @@ app.use(function(request, response, next) {
 
 app.get("/", function(request, response){
       db.all("select * from movie", function(err, rows){
-
 	   response.render('movies', {rows: rows})
       })
 	
@@ -43,7 +42,6 @@ app.get("/movies/:id", function(request, response){
     
     db.all("select * from movie where movie.id = ?", id, function(err, movieRows){     
         db.all("select rating from rating where rating.movie_id = ?", id, function(err, rows){
-            console.log(movieRows)
             response.render('movie', {movie: movieRows[0], rows: rows})
         })
     })
@@ -55,7 +53,7 @@ app.get("/create-movie", function(request, response){
 
 app.post("/create-movie", function(request, response){
     
-    db.all("select * from movie where lower(movie.title) = ? and lower(movie.year) = ?", request.body.title.toLowerCase(), request.body.year.toLowerCase(), function(err, rows){
+    db.all("select * from movie where lower(movie.title) = ? and movie.year = ?", request.body.title.toLowerCase(), request.body.year, function(err, rows){
         
         if (rows.length == 0) {
              db.all("select * from movie", function(err, rows2){
@@ -65,17 +63,23 @@ app.post("/create-movie", function(request, response){
                      title: request.body.title
                  }
                 db.run("INSERT INTO movie(id,year,title) VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
-                db.run("INSERT INTO rating(movie_id, rating) VALUES (?,?)", newMovie.movie_id, request.body.rating)
+                db.run("INSERT INTO rating(movie_id, rating, user_id) VALUES (?,?,?)", newMovie.id, parseInt(request.body.rating), request.session.user.id)
                 
                 response.redirect("/movies/"+newMovie.id)
  
              })
         }
         else {
-            console.log(rows)
-            db.run("INSERT INTO rating(movie_id, rating, user_id) VALUES (?,?,?)", rows[0].id, request.body.rating, request.session.user.id)
-
-            response.redirect("/movies/"+rows[0].id)
+            db.all("select user_id from rating where user_id = ?", request.session.user.id, function(err, rows3){
+                if (rows3.length == 0) {
+                    console.log(rows[0].id)
+                    console.log(request.session.user.id)
+                    db.run("INSERT INTO rating(movie_id, rating, user_id) VALUES (?,?,?)", rows[0].id, parseInt(request.body.rating), request.session.user.id)
+                    response.redirect("/movies/"+rows[0].id)
+                }
+                else
+                    response.render('movies.hbs', {error: "You already rated this movie"})
+            })
         }
             
     })
@@ -91,9 +95,11 @@ app.post("/create-user", function(request, response){
         
         if (rows.length == 0) {
             db.all("select * from users", function(err, rows2){
-                db.run("INSERT INTO users VALUES (?, ?,?)", rows2.length, request.body.username, request.body.password)
+                db.run("INSERT INTO users VALUES (?, ?, ?)", rows2.length, request.body.username, request.body.password)
                 var newUser = {id: rows2.length, username: request.body.username, password: request.body.password }
+                console.log(rows2.length)
                 request.session.user = newUser
+                console.log(request.session.user.id)
                 response.redirect('/')
             })
         } 
@@ -116,6 +122,7 @@ app.post("/log-user", function(request, response){
             var newUser = {id: rows[0].user_id, username: request.body.username, password: request.body.password }
             console.log(newUser)
             request.session.user = newUser
+            console.log(request.session.user.id)
             response.redirect("/")
         }   
     })

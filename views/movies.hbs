@@ -1,8 +1,9 @@
 <h1>Movies</h1>
+{{#if error}}
+    <h2>{{error}}</h2>
+{{/if}}
 <ul>
 	{{#each rows}}
 		<li><a href="/movies/{{id}}">{{title}}</a></li>
 	{{/each}}
 </ul>
-
-<div><a href="/create-movie">Rate movie</a></div>

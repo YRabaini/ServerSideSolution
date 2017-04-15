@@ -57,10 +57,8 @@ db.serialize(function(){
         else {
                 var fillRating = db.prepare("INSERT INTO rating VALUES (?,?,?)")
                 // RAJOUTE VALUE USER_ID AFTER USER SESSION IS DONE
-                for (i=0; i < ratings.length ; i++) {
-                    if (ratings[i].movie_id != null, ratings[i].rating != null, ratings[i].by_user_id != null)
-                        fillRating.run(ratings[i].movie_id, ratings[i].rating)
-                }
+                for (i=0; i < ratings.length ; i++)
+                        fillRating.run(ratings[i].movie_id, ratings[i].rating, ratings[i].user_id)
             fillRating.finalize()    
         }        
     })
