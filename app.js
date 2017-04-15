@@ -123,6 +123,9 @@ app.post("/create-user", function(request, response){
             db.all("select * from users", function(err, rows2){
                 db.run("INSERT INTO users VALUES (?, ?, ?)", rows2.length, request.body.username, hashPass)
                 var newUser = {id: rows2.length, username: request.body.username, password: hashPass }
+                // GIVE READER AND WRITERS ROLES
+                db.run("INSERT INTO roleMembers VALUES (?, ?)", newUser.id, 1)
+                db.run("INSERT INTO roleMembers VALUES (?, ?)", newUser.id, 2)
                 request.session.user = newUser
                 response.redirect('/')
             })

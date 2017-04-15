@@ -20,6 +20,12 @@ var users = [
     {user_id: 1, username: "yanice", password: hash.generate("yanice")}
 ]
 
+var roles = [
+    {role_id:0, role: "admin"},
+    {role_id:1, role: "write"},
+    {role_id:2, role: "read"}
+]
+
 ///////////////////////////// DELETE BEFORE THIS /////////////////////
 
 // CODE EXAMPLE
@@ -77,4 +83,33 @@ db.serialize(function(){
             fillUser.finalize()    
         }        
     })
+       
+       
+     db.run("CREATE TABLE if not exists roles (role_id INT UNIQUE PRIMARY KEY, role TEXT UNIQUE)", function(err) {
+        if (err)
+            console.log(err.message)
+        else {
+                var fillRole = db.prepare("INSERT INTO roles VALUES (?,?)")
+                
+                for (i=0; i < roles.length ; i++) {
+                    if (roles[i].role_id != null, roles[i].role != null)
+                        fillRole.run(roles[i].role_id, roles[i].role)
+                }
+            fillRole.finalize()    
+        }        
+    })
+     
+     db.run("CREATE TABLE if not exists roleMembers (memberId INT, role_id INT)", function(err) {
+        if (err)
+            console.log(err.message)
+        else {
+                var fillMember = db.prepare("INSERT INTO roleMembers VALUES (?,?)")
+                
+                fillMember.run(0, 0)
+                fillMember.run(1, 1)
+                fillMember.run(1, 2)
+                fillMember.finalize()    
+        }        
+    })
+       
 })  
