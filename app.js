@@ -31,7 +31,6 @@ app.use(function(request, response, next) {
 ///////////////
 
 app.get("/", function(request, response){
-    // push un truc de la db ici
       db.all("select * from movie", function(err, rows){
 
 	   response.render('movies', {rows: rows})
@@ -41,7 +40,6 @@ app.get("/", function(request, response){
 
 app.get("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
-//	var rating = []
     
     db.all("select * from movie where movie.id = ?", id, function(err, movieRows){     
         db.all("select rating from rating where rating.movie_id = ?", id, function(err, rows){
@@ -57,7 +55,6 @@ app.get("/create-movie", function(request, response){
 
 app.post("/create-movie", function(request, response){
     
-    // redo en propre avec un query pour trouve les truc submit et do the same pour le user 
     db.all("select * from movie where lower(movie.title) = ? and lower(movie.year) = ?", request.body.title.toLowerCase(), request.body.year.toLowerCase(), function(err, rows){
         
         if (rows.length == 0) {
@@ -76,7 +73,7 @@ app.post("/create-movie", function(request, response){
         }
         else {
             console.log(rows)
-            db.run("INSERT INTO rating(movie_id, rating) VALUES (?,?)", rows[0].id, request.body.rating)
+            db.run("INSERT INTO rating(movie_id, rating, user_id) VALUES (?,?,?)", rows[0].id, request.body.rating, request.session.user.id)
 
             response.redirect("/movies/"+rows[0].id)
         }
@@ -95,7 +92,7 @@ app.post("/create-user", function(request, response){
         if (rows.length == 0) {
             db.all("select * from users", function(err, rows2){
                 db.run("INSERT INTO users VALUES (?, ?,?)", rows2.length, request.body.username, request.body.password)
-                var newUser = {id: request.body.username, password: request.body.password }
+                var newUser = {id: rows2.length, username: request.body.username, password: request.body.password }
                 request.session.user = newUser
                 response.redirect('/')
             })
@@ -113,11 +110,10 @@ app.get("/log-user", function(request, response){
 
 app.post("/log-user", function(request, response){
     db.all("select * from users where username = ? and password = ?", request.body.username, request.body.password, function(err, rows){
-        
         if (rows.length == 0)
             response.render("log-user.hbs", {error: "Username or password is wrong"}) 
         else {
-            var newUser = {id: request.body.username, password: request.body.password }
+            var newUser = {id: rows[0].user_id, username: request.body.username, password: request.body.password }
             console.log(newUser)
             request.session.user = newUser
             response.redirect("/")

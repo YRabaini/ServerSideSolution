@@ -8,10 +8,10 @@ var movies = [
 ]
 // ADD BY_USER_ID TO DB WHEN USER SESSION IS DONE
 var ratings = [
-    {movie_id: 0, rating: 5, by_user_id: 1},
-    {movie_id: 0, rating: 4, by_user_id: 1},
-    {movie_id: 1, rating: 3, by_user_id: 1},
-    {movie_id: 2, rating: 0, by_user_id: 1}
+    {movie_id: 0, rating: 5, user_id: 1},
+    {movie_id: 0, rating: 4, user_id: 1},
+    {movie_id: 1, rating: 3, user_id: 1},
+    {movie_id: 2, rating: 0, user_id: 1}
 ]
 
 var users = [
@@ -51,11 +51,11 @@ db.serialize(function(){
             }
     })
     
-    db.run("CREATE TABLE if not exists rating (movie_id INT, rating INT)", function(err) {
+    db.run("CREATE TABLE if not exists rating (movie_id INT, rating INT, user_id INT)", function(err) {
         if (err)
             console.log(err.message)
         else {
-                var fillRating = db.prepare("INSERT INTO rating VALUES (?,?)")
+                var fillRating = db.prepare("INSERT INTO rating VALUES (?,?,?)")
                 // RAJOUTE VALUE USER_ID AFTER USER SESSION IS DONE
                 for (i=0; i < ratings.length ; i++) {
                     if (ratings[i].movie_id != null, ratings[i].rating != null, ratings[i].by_user_id != null)
