@@ -1,5 +1,18 @@
 <h1>User</h1>
-{{#if rows}}
-	<div>Id: {{rows.id}}</div>
-	<div>name: {{rows.username}}</div>
+{{#if user}}
+	<div>Id: {{this.user_id}}</div>
+	<div>username: {{this.username}}</div>
+	<div>pass: {{this.password}}</div>
+    <h2>Ratings</h2>
+    <ul>
+        {{#each rating}}
+                <li>{{rating.movie_id}}</li>
+                <li>{{rating.rating}}</li>
+                <form action="/user/:id" method="post">
+	               <div><input type="submit" value="Delete this rating!"></div>
+                </form>
+        {{/each}}
+    </ul>
+{{else}}
+	<p>No user with the given id exists.</p>
 {{/if}}

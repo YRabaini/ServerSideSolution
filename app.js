@@ -128,6 +128,33 @@ app.post("/log-user", function(request, response){
     })
 })
 
+app.get("/users", function(request, response){
+    db.all("select * from users", function(err, rows){
+        response.render("users.hbs", { rows: rows })
+    })
+})
+
+app.get("/user/:id", function(request, response){
+    
+    var id = parseInt(request.params.id)
+    db.all("select * from users where user_id=?", id, function(err, user){
+        console.log(user[0])
+        db.all("select * from rating where user_id=?", id, function(err, rating){
+            console.log(rating)
+            response.render("user.hbs", { user: user[0] , rating: rating})
+        })
+    })
+})
+
+/*app.post("/user/:id", function(request, response){
+    var id = parseInt(request.params.id)
+    db.all("select * from users where user_id=?", id, function(err, user){
+        db.all("select * from ratings where user_id=?", id, function(err, ratings){
+            console.log(rows)
+            response.render("user.hbs", { user: user , ratings: ratings})
+        })
+    })
+})*/
 
 app.get("/logout", function(request, response){
     request.session.destroy(function(){})
