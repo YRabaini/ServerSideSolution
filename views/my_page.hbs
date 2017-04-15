@@ -1,0 +1,9 @@
+<h1>This is my page!</h1>
+{{#each user}}
+    <form action="/movies/{{id}}" method="post">
+	   <div><a href="/movies/{{id}}>{{title}}</a>"</div>
+	   <div>Rating: {{rating}}</div>
+	   <div><input type="submit" value="Delete!"></div>
+    </form>
+
+{{/each}}

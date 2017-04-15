@@ -1,16 +1,13 @@
 <h1>User</h1>
 {{#if user}}
-	<div>Id: {{this.user_id}}</div>
-	<div>username: {{this.username}}</div>
-	<div>pass: {{this.password}}</div>
+	<div>Id: {{user_id}}</div>
+	<div>username: {{username}}</div>
+	<div>pass: {{password}}</div>
     <h2>Ratings</h2>
     <ul>
         {{#each rating}}
-                <li>{{rating.movie_id}}</li>
-                <li>{{rating.rating}}</li>
-                <form action="/user/:id" method="post">
-	               <div><input type="submit" value="Delete this rating!"></div>
-                </form>
+                <li>{{movie_id}}</li>
+                <li>{{rating}}</li>
         {{/each}}
     </ul>
 {{else}}

@@ -47,6 +47,17 @@ app.get("/movies/:id", function(request, response){
     })
 })
 
+app.post("/movies/:id", function(request, response){
+	var id = parseInt(request.params.id)
+    
+    db.run("DELETE from rating where rating.movie_id=? and rating.user_id=?", id, request.session.user.id)
+    db.all("select * from rating where rating.movie_id=?", id, function(err,rows){
+      if (rows.length == 0)
+          db.run("DELETE from movie where id=?", id)
+    response.redirect("/my_page")
+    })
+})
+
 app.get("/create-movie", function(request, response){
 	response.render('create-movie', {})
 })
@@ -146,15 +157,13 @@ app.get("/user/:id", function(request, response){
     })
 })
 
-/*app.post("/user/:id", function(request, response){
-    var id = parseInt(request.params.id)
-    db.all("select * from users where user_id=?", id, function(err, user){
-        db.all("select * from ratings where user_id=?", id, function(err, ratings){
-            console.log(rows)
-            response.render("user.hbs", { user: user , ratings: ratings})
-        })
+app.get("/my_page", function(request, response){
+    db.all("SELECT * from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id AND users.username = ?", request.session.user.username, function(err, rows){
+        response.render("my_page.hbs", {user: rows})
     })
-})*/
+})
+
+
 
 app.get("/logout", function(request, response){
     request.session.destroy(function(){})
