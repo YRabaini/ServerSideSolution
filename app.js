@@ -3,6 +3,8 @@ var bodyParser = require('body-parser')
 var sqlite3 = require('sqlite3')
 var session = require('express-session')
 var hash = require('password-hash')
+var ddb = require('./data.js')
+
 
 var db = new sqlite3.Database("./db/movie-friends.db")
 var app = express()
@@ -11,8 +13,6 @@ var app = express()
 // method="POST".
 app.use(bodyParser.urlencoded({extended: false}))
 app.set('view engine', 'hbs')
-
-var db = new sqlite3.Database("./db/movie-friends.db")
 
 
 ///// CHUNK CODE SESSION
@@ -32,10 +32,10 @@ app.use(function(request, response, next) {
 ///////////////
 
 app.get("/", function(request, response){
-      db.all("select * from movie", function(err, rows){
-	   response.render('movies', {rows: rows})
-      })
-	
+    ddb.getAllMovies(function(movies){
+        console.log(movies)
+        response.render('movies', {rows: movies})
+    })	
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,11 +44,9 @@ app.get("/", function(request, response){
 
 app.get("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
-    
-    db.all("select * from movie where movie.id = ?", id, function(err, movieRows){     
-        db.all("select rating from rating where rating.movie_id = ?", id, function(err, rows){
-            response.render('movie', {movie: movieRows[0], rows: rows})
-        })
+    // New way to do it
+    ddb.getMovieById(id, function(movie, rating){
+        response.render('movie', {movie: movie[0], rows: rating})
     })
 })
 

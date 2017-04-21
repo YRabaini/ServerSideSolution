@@ -48,11 +48,11 @@ db.serialize(function(){
             console.log(err.message)
         else {
                 var fill = db.prepare("INSERT INTO movie VALUES (?,?,?)")
-                
+                                
                 for (i=0; i < movies.length ; i++) {
                     if (movies[i].id != null && movies[i].year!= null && movies[i].title != null)
                         fill.run(movies[i].id, movies[i].year, movies[i].title)
-                        }    
+                }    
                 fill.finalize()
             }
     })
