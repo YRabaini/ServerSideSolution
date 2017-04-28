@@ -26,3 +26,74 @@ exports.getMovieById = function (id, callback) {
   )
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// GET MOVIES USERS /////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+exports.getMovieUser = function(username, callback) {
+    db.all("SELECT movie.title, movie.id, rating.rating, users.user_id from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id AND users.username = ?", username, function(err, rows){
+        callback(rows)        
+    })
+}
+
+exports.getMovieAdmin = function (callback) {
+    
+    db.all("SELECT movie.title, movie.id, rating.rating, rating.user_id, users.user_id from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id",
+           function(err, rows) {
+            callback(rows)
+    })
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// DELETE RATING AND MOVIE /////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+exports.deleteRatingByUser = function(id, userId) {
+    db.run("DELETE FROM rating WHERE rating.movie_id=? AND rating.user_id=?", id, userId)
+}
+
+exports.deleteMovieIfEmpty = function(id, callback) {
+    db.all("select * from rating where rating.movie_id=?", id, function(err,rows){
+        if (rows.length == 0)
+            db.run("DELETE from movie where id=?", id)
+    })           
+}
+
+exports.deleteMovieByAdmin = function(userId, movieId) {
+    db.run("DELETE FROM rating WHERE rating.movie_id=? AND rating.user_id=?", movieId, userId)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// CREATE MOVIE ///////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// GET USERS ///////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+exports.getAllUsers = function(callback) {
+    db.all("select * from users", function(err, rows){
+        callback(rows)
+    })
+}
+
+exports.getUserById = function(id, callback) {
+    db.all("select * from users where user_id=?", id, function(err, user){
+        db.all("select * from rating where user_id=?", id, function(err, rating){
+            callback(user, rating)
+        })    
+    })
+}
+
+
+
+
+
+
+
+
+
+

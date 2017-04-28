@@ -4,7 +4,14 @@ var sqlite3 = require('sqlite3')
 var session = require('express-session')
 var hash = require('password-hash')
 var ddb = require('./data.js')
+var pw = require('./administration.js')
 
+// DEBUG
+
+/*
+var pry = require('pryjs')
+eval(pry.it)
+*/
 
 var db = new sqlite3.Database("./db/movie-friends.db")
 var app = express()
@@ -34,6 +41,7 @@ app.use(function(request, response, next) {
 app.get("/", function(request, response){
     ddb.getAllMovies(function(movies){
         console.log(movies)
+        response.status(200)
         response.render('movies', {rows: movies})
     })	
 })
@@ -45,21 +53,19 @@ app.get("/", function(request, response){
 app.get("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
     // New way to do it
-    ddb.getMovieById(id, function(movie, rating){
+    ddb.getMovieById(id, function(movie, rating) {
+        response.status(200)
         response.render('movie', {movie: movie[0], rows: rating})
     })
 })
 
 app.post("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
-    
-        db.run("DELETE FROM rating WHERE rating.movie_id=? AND rating.user_id=?", id, request.session.user.id)
-        db.all("select * from rating where rating.movie_id=?", id, function(err,rows){
-            if (rows.length == 0) {
-                db.run("DELETE from movie where id=?", id)
-                response.redirect("/my_page")
-            }
-        })
+    var userId = request.session.user.id
+    ddb.deleteRatingByUser(id, userId)
+    ddb.deleteMovieIfEmpty(id, function(){})
+    response.status(200)
+    response.redirect("/my_page")
 })
 
 // DELETE BY ADMIN
@@ -67,15 +73,12 @@ app.post("/movies/:id", function(request, response){
 app.post("/delete_rating", function(request, response){
 	var userId = request.body.userid
     var movieId = request.body.movieid
-        console.log(movieId)
-        db.run("DELETE FROM rating WHERE rating.movie_id=? AND rating.user_id=?", movieId, userId)
-        db.all("select * from rating where rating.movie_id=?", movieId, function(err,rows){
-            if (rows.length == 0) {
-                db.run("DELETE from movie where id=?", movieId)
-                response.redirect("/")
-            }
-            response.render('admin.hbs', {error: "Rating deleted!"})
-        })
+    console.log(movieId)
+    ddb.deleteMovieByAdmin(userId, movieId)
+    ddb.deleteMovieIfEmpty(movieId, function(){
+        response.status(200)
+        response.render('admin.hbs', {error: "Rating deleted!"})
+    })
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +87,7 @@ app.post("/delete_rating", function(request, response){
 
 app.get("/create-movie", function(request, response){
 	response.render('create-movie', {})
+    response.status(200)
 })
 
 app.post("/create-movie", function(request, response){
@@ -126,6 +130,7 @@ app.post("/create-movie", function(request, response){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get("/create-user", function(request, response){
+    response.status(200)
 	response.render('create-user', {})
 })
 
@@ -183,7 +188,7 @@ app.post("/log-user", function(request, response){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get("/users", function(request, response){
-    db.all("select * from users", function(err, rows){
+    ddb.getAllUsers(function(rows) {
         response.render("users.hbs", { rows: rows })
     })
 })
@@ -191,12 +196,9 @@ app.get("/users", function(request, response){
 app.get("/user/:id", function(request, response){
     
     var id = parseInt(request.params.id)
-    db.all("select * from users where user_id=?", id, function(err, user){
-        console.log(user[0])
-        db.all("select * from rating where user_id=?", id, function(err, rating){
-            console.log(rating)
-            response.render("user.hbs", { user: user[0] , rating: rating})
-        })
+    ddb.getUserById(id, function(user, rating) {
+        response.status(200)
+        response.render("user.hbs", { user: user[0] , rating: rating})
     })
 })
 
@@ -205,17 +207,20 @@ app.get("/user/:id", function(request, response){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get("/my_page", function(request, response){
-    db.all("SELECT movie.title, movie.id, rating.rating, users.user_id from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id AND users.username = ?", request.session.user.username, function(err, rows){
+    var username = request.session.user.username
+    ddb.getMovieUser(username, function(rows){
+        response.status(200)
         response.render("my_page.hbs", {user: rows})        
     })
 })
 
 app.get("/admin", function(request, response){
-  
-        if (request.session.user.role != "admin")
-            response.status(403).send("ERROR 403: Unauthorized Acces! You can't come here buddy :(")   
-        
-        db.all("SELECT movie.title, movie.id, rating.rating, rating.user_id, users.user_id from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id", function(err, rows){
+    var role = request.session.user.role
+    if (pw.isAdmin(role) == false)
+        response.status(401).send("ERROR 401: Unauthorized Access! You can't come here buddy :(")   
+    else
+        ddb.getMovieAdmin(function(rows){
+            response.status(200)
             response.render("admin.hbs", {user: rows})
         })
 })
@@ -225,8 +230,11 @@ app.get("/admin", function(request, response){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get("/logout", function(request, response){
-    request.session.destroy(function(){})
-    response.redirect('/')
+    request.session.destroy(function(){
+        response.status(200)
+        response.redirect('/')
+    })
+    
 })
 
 app.listen(8000)
