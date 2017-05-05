@@ -10,15 +10,18 @@ var hash = require('password-hash')
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-/*exports.getAllMovies = function (callback) {
-  db.all("SELECT * FROM movie", function (err, movies) {
-      callback(movies)
-    })
-}*/
-
 exports.isAdmin = function(role) {
     if (role != "admin")
         return false
     else
         return true        
+}
+
+exports.hashPassword = function(password) {
+    var pass = hash.generate(password)
+    return (pass)
+}
+
+exports.verifyPassword = function(inputPassword, pass) {
+    return (hash.verify(inputPassword, pass))
 }

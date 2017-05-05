@@ -1,4 +1,5 @@
 var sqlite3 = require('sqlite3')
+var secu = require('./administration.js')
 
 var db = new sqlite3.Database("./db/movie-friends.db")
 
@@ -89,10 +90,66 @@ exports.getUserById = function(id, callback) {
 }
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// USERS CREATION & LOG
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
+exports.doesUserExist = function(username, callback) {
+    db.all("SELECT * from users where users.username=?", username, function(err, rows){
+        console.log(rows.length)
+        if (rows.length == 0)
+            callback(false)
+        else
+            callback(true)
+    })
+}
 
+exports.createUser = function(username, password, callback) {
+    var pass = secu.hashPassword(password)
+    
+    db.all("select * from users", function(err, rows) {
+        var newId = rows.length
+        db.run("INSERT INTO users VALUES (?,?,?)", newId, username, pass)
+        db.run("INSERT INTO roleMembers VALUES (?, ?)", newId, 1)
+        db.run("INSERT INTO roleMembers VALUES (?, ?)", newId, 2)
+        callback(newId, username, pass)
+    })
+}
 
+exports.logUser = function(username, password, callback) {
+    db.all("SELECT * FROM users WHERE users.username=?", username, function(err, userRows){
+        if(err)
+            console.log(err)
+        else {
+            var dbPassword = userRows[0].password
+            if (secu.verifyPassword(password ,dbPassword) == true) {
+                    console.log(userRows[0].role_id)
+                if (getRoleById(userRows[0].user_id) == 0){
+                    callback(null, "admin", userRows[0])
+                }
+                else
+                    callback(null, "limited", userRows[0])
+            }
+            else
+                callback("Password is invalid", "", null)
+        }
+        
+    })
+}
 
+function getRoleById(id){
+    db.all("SELECT role_id FROM roleMembers WHERE memberId=?", id, function(err, rows){
+        console.log("user_id in getRoleById " + id)
+        if (err)
+            console.log(err)
+        else {
+            if (rows[0].role_id == 0)
+                return (0)
+            else 
+                return (1)
+        }      
+    })
+}
 
 
 

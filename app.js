@@ -10,8 +10,9 @@ var pw = require('./administration.js')
 
 /*
 var pry = require('pryjs')
-eval(pry.it)
+    eval(pry.it)
 */
+
 
 var db = new sqlite3.Database("./db/movie-friends.db")
 var app = express()
@@ -40,7 +41,6 @@ app.use(function(request, response, next) {
 
 app.get("/", function(request, response){
     ddb.getAllMovies(function(movies){
-        console.log(movies)
         response.status(200)
         response.render('movies', {rows: movies})
     })	
@@ -73,7 +73,6 @@ app.post("/movies/:id", function(request, response){
 app.post("/delete_rating", function(request, response){
 	var userId = request.body.userid
     var movieId = request.body.movieid
-    console.log(movieId)
     ddb.deleteMovieByAdmin(userId, movieId)
     ddb.deleteMovieIfEmpty(movieId, function(){
         response.status(200)
@@ -111,8 +110,10 @@ app.post("/create-movie", function(request, response){
         else {
             db.all("select user_id from rating where user_id = ?", request.session.user.id, function(err, rows3){
                 if (rows3.length == 0) {
+/*
                     console.log(rows[0].id)
                     console.log(request.session.user.id)
+*/
                     db.run("INSERT INTO rating(movie_id, rating, user_id) VALUES (?,?,?)", rows[0].id, parseInt(request.body.rating), request.session.user.id)
                     response.redirect("/movies/"+rows[0].id)
                 }
@@ -135,26 +136,25 @@ app.get("/create-user", function(request, response){
 })
 
 app.post("/create-user", function(request, response){
-    db.all("select * from users where users.username = ?", request.body.username, function(err, rows){
-        
-        if (rows.length == 0) {
-            var hashPass = hash.generate(request.body.password)
-            console.log(hashPass)
-            db.all("select * from users", function(err, rows2){
-                db.run("INSERT INTO users VALUES (?, ?, ?)", rows2.length, request.body.username, hashPass)
-                var newUser = {id: rows2.length, username: request.body.username, password: hashPass, role: "limited" }
-                // GIVE READER AND WRITERS ROLES
-                db.run("INSERT INTO roleMembers VALUES (?, ?)", newUser.id, 1)
-                db.run("INSERT INTO roleMembers VALUES (?, ?)", newUser.id, 2)
-                request.session.user = newUser
-                response.redirect('/')
-            })
-        } 
-        else {
-            response.render('create-user.hbs', {error: "User already exists."})
-        }    
-    })
-	
+    
+    var inputUsername = request.body.username
+    var inputPass = request.body.password
+    
+    var prout = ddb.doesUserExist(inputUsername)
+    if (ddb.doesUserExist(inputUsername) == true) {
+        response.render('create-user.hbs', {error: "User already exists."})
+    }
+    else {
+        ddb.createUser(inputUsername, inputPass, function(newId, newUsername, newPass) {
+            var newUser = {id: newId, username: newUsername, password: newPass, role: "limited" }
+            //console.log(newId)
+            //console.log(newUsername)
+            //console.log(newPass)
+            
+            request.session.user = newUser
+            response.redirect('/')
+        })
+    }
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,21 +166,26 @@ app.get("/log-user", function(request, response){
 })
 
 app.post("/log-user", function(request, response){
-    db.all("select * from users where username = ?", request.body.username, function(err, rows){
-        if (hash.verify(request.body.password, rows[0].password)) {     
-                // Account is good, nowcheck for rights
-                db.get("SELECT role_id from roleMembers where memberId=?", rows[0].user_id, function(err, rows2){
-                    if (rows2.role_id == 0)
-                        var newUser = {id: rows[0].user_id, username: request.body.username, password: rows[0].password, role: "admin" }
-                    else
-                        var newUser = {id: rows[0].user_id, username: request.body.username, password: rows[0].password, role: "limited" }
+    var inputUser = request.body.username 
+    var inputPass = request.body.password
+
+    ddb.doesUserExist(inputUser, function(returnValue) {
+        if (returnValue == true) {
+            
+            ddb.logUser(inputUser, inputPass, function(err, role, userRows){
+                if (err)
+                    response.render("log-user.hbs", {error: err})
+                else {
+                    console.log(role)
+                    var newUser = {id: userRows.user_id, username: userRows.username, password: userRows.password, role: role}
                     request.session.user = newUser
                     response.redirect("/")
-                })
-        }   
+                }
+            })
+        }
         else
-            response.render("log-user.hbs", {error: "Username or password is wrong"}) 
-    })
+            response.render("log-user.hbs", {error: "Username doesn't exist"})
+        })
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
