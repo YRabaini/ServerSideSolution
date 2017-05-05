@@ -14,6 +14,37 @@ exports.getAllMovies = function (callback) {
     })
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// CREATE MOVIES ////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+exports.doesMovieExist = function(title, year, callback) {
+    db.all("SELECT * FROM movie where LOWER(title)=? AND year=?", title.toLowerCase(), year, function(err, movieRows){
+        if (err)
+            console.log(err)
+        else {
+            if (movieRows.length == 0)
+                callback(false, [])
+            else
+                callback(true, movieRows[0])
+        }
+    })
+}
+
+exports.createMovie = function(newMovie, callback) {
+    db.all("SELECT * FROM movie", function (err, movies) {
+        console.log(movies.length)
+        newMovie.id = movies.length
+        db.run("INSERT INTO movie VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
+        callback(newMovie.id)
+    })    
+}
+
+exports.createRating = function(user_id, movie_id, rating) {
+    db.run("INSERT INTO rating VALUES (?,?,?)", movie_id, rating, user_id)
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// GET MOVIE BY ID + ITS RATINGS ///////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +59,7 @@ exports.getMovieById = function (id, callback) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// GET MOVIES USERS /////////////////////////////////////////
+////////////////////////////// GET MOVIES RATED BY USERS /////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 exports.getMovieUser = function(username, callback) {
@@ -140,7 +171,6 @@ exports.logUser = function(username, password, callback) {
 
 function getRoleById(id, callback){
     db.all("SELECT role_id FROM roleMembers WHERE memberId=?", id, function(err, rows){
-        console.log("user_id in getRoleById " + id)
         if (err)
             console.log(err)
         else {
@@ -151,7 +181,4 @@ function getRoleById(id, callback){
         }      
     })
 }
-
-
-
 

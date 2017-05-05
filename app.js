@@ -91,39 +91,29 @@ app.get("/create-movie", function(request, response){
 
 app.post("/create-movie", function(request, response){
     
-    db.all("select * from movie where lower(movie.title) = ? and movie.year = ?", request.body.title.toLowerCase(), request.body.year, function(err, rows){
-        
-        if (rows.length == 0) {
-             db.all("select * from movie", function(err, rows2){
-                 newMovie = {
-                     id: rows2.length,
-                     year: parseInt(request.body.year),
-                     title: request.body.title
-                 }
-                db.run("INSERT INTO movie(id,year,title) VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
-                db.run("INSERT INTO rating(movie_id, rating, user_id) VALUES (?,?,?)", newMovie.id, parseInt(request.body.rating), request.session.user.id)
-                
-                response.redirect("/movies/"+newMovie.id)
- 
-             })
-        }
-        else {
-            db.all("select user_id from rating where user_id = ?", request.session.user.id, function(err, rows3){
-                if (rows3.length == 0) {
-/*
-                    console.log(rows[0].id)
-                    console.log(request.session.user.id)
-*/
-                    db.run("INSERT INTO rating(movie_id, rating, user_id) VALUES (?,?,?)", rows[0].id, parseInt(request.body.rating), request.session.user.id)
-                    response.redirect("/movies/"+rows[0].id)
-                }
-                else
-                    response.render('movies.hbs', {error: "You already rated this movie"})
+    var inputTitle = request.body.title
+    var inputYear = request.body.year
+    var inputRating = request.body.rating
+    
+    var newMovie = {id: 0, title: inputTitle, year: inputYear}
+    
+    ddb.doesMovieExist(inputTitle, inputYear, function(returnValue, row){
+        if (returnValue == false) {
+            ddb.createMovie(newMovie, function(movie_id){
+                console.log("in app.js " + movie_id)
+                newMovie.id = movie_id
+                ddb.createRating(request.session.user.id, movie_id, inputRating)
+                response.redirect("/movies/"+movie_id)
             })
         }
-            
-    })
-	
+        else {
+            console.log(row.movie_id)
+            newMovie.id = row.movie_id
+            ddb.createRating(request.session.user.id ,row.movie_id, inputRating)
+            response.redirect("/movies/"+row.movie_id)
+
+        }
+    })	
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -140,21 +130,18 @@ app.post("/create-user", function(request, response){
     var inputUsername = request.body.username
     var inputPass = request.body.password
     
-    var prout = ddb.doesUserExist(inputUsername)
-    if (ddb.doesUserExist(inputUsername) == true) {
-        response.render('create-user.hbs', {error: "User already exists."})
-    }
-    else {
-        ddb.createUser(inputUsername, inputPass, function(newId, newUsername, newPass) {
-            var newUser = {id: newId, username: newUsername, password: newPass, role: "limited" }
-            //console.log(newId)
-            //console.log(newUsername)
-            //console.log(newPass)
-            
-            request.session.user = newUser
-            response.redirect('/')
-        })
-    }
+    ddb.doesUserExist(inputUsername, function(returnValue){
+        if (returnValue == true)
+            response.render('create-user.hbs', {error: "User already exists."})
+        else {
+            ddb.createUser(inputUsername, inputPass, function(newId, newUsername, newPass) {
+                var newUser = {id: newId, username: newUsername, password: newPass, role: "limited" }
+    
+                request.session.user = newUser
+                response.redirect('/')
+            })
+        }
+    })
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
