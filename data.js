@@ -123,12 +123,13 @@ exports.logUser = function(username, password, callback) {
         else {
             var dbPassword = userRows[0].password
             if (secu.verifyPassword(password ,dbPassword) == true) {
-                    console.log(userRows[0].role_id)
-                if (getRoleById(userRows[0].user_id) == 0){
-                    callback(null, "admin", userRows[0])
-                }
-                else
-                    callback(null, "limited", userRows[0])
+                    
+                getRoleById(userRows[0].user_id, function(isAdminFlag){
+                    if (isAdminFlag == 0) 
+                        callback(null, "admin", userRows[0])
+                    else
+                        callback(null, "limited", userRows[0])
+                })
             }
             else
                 callback("Password is invalid", "", null)
@@ -137,16 +138,16 @@ exports.logUser = function(username, password, callback) {
     })
 }
 
-function getRoleById(id){
+function getRoleById(id, callback){
     db.all("SELECT role_id FROM roleMembers WHERE memberId=?", id, function(err, rows){
         console.log("user_id in getRoleById " + id)
         if (err)
             console.log(err)
         else {
             if (rows[0].role_id == 0)
-                return (0)
+                callback(0)
             else 
-                return (1)
+                callback(1)
         }      
     })
 }

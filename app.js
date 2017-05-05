@@ -176,7 +176,6 @@ app.post("/log-user", function(request, response){
                 if (err)
                     response.render("log-user.hbs", {error: err})
                 else {
-                    console.log(role)
                     var newUser = {id: userRows.user_id, username: userRows.username, password: userRows.password, role: role}
                     request.session.user = newUser
                     response.redirect("/")
