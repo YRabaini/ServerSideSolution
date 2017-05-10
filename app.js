@@ -362,10 +362,27 @@ app.delete("/api/ratings", function(request, response){
             else {
                 var movieId = request.query.movieId
                 var userId = request.query.userId
-                ddb.deleteRatingByUser(movieId, userId) 
-                ddb.deleteMovieIfEmpty(movieId)
-                response.status(204)
-                response.json(null)
+                ddb.getMovieById(movieId, function(movie){
+                    if (movie.length == 0) {
+                        response.status(404)
+                        response.json(null)
+                    }
+                    else {
+                        ddb.getUserById(userId, function(user, rating){
+                            if (user.length == 0) {
+                                response.status(404)
+                                response.json(null)
+                            }
+                            else {
+                                ddb.deleteRatingByUser(movieId, userId) 
+                                ddb.deleteMovieIfEmpty(movieId)
+                                response.status(204)
+                                response.json(null)
+                                
+                            }
+                        })
+                    }
+                })
             }
         })
     }
