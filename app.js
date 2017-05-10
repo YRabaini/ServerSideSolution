@@ -5,6 +5,7 @@ var session = require('express-session')
 var hash = require('password-hash')
 var ddb = require('./data.js')
 var pw = require('./administration.js')
+var json = require('jsonwebtoken')
 
 // DEBUG
 
@@ -14,17 +15,15 @@ var pry = require('pryjs')
 */
 
 
-var db = new sqlite3.Database("./db/movie-friends.db")
 var app = express()
 
 // This middleware enables us to use request.body to read data from forms with
 // method="POST".
-app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}))
 app.set('view engine', 'hbs')
 
-
 ///// CHUNK CODE SESSION
-
 app.use(session({
     resave: false,
     saveUninitialized: true,
@@ -40,15 +39,20 @@ app.use(function(request, response, next) {
 ///////////////
 
 app.get("/", function(request, response){
-    ddb.getAllMovies(function(movies){
-        response.status(200)
-        response.render('movies', {rows: movies})
-    })	
+    response.status(200)
+    response.redirect('/movies')
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////// MOVIES ////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+app.get("/movies", function(request, response){
+    ddb.getAllMovies(function(movies){
+        response.status(200)
+        response.render('movies', {rows: movies})
+    })	
+})
 
 app.get("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
@@ -63,7 +67,7 @@ app.post("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
     var userId = request.session.user.id
     ddb.deleteRatingByUser(id, userId)
-    ddb.deleteMovieIfEmpty(id, function(){})
+    ddb.deleteMovieIfEmpty(id)
     response.status(200)
     response.redirect("/my_page")
 })
@@ -74,10 +78,10 @@ app.post("/delete_rating", function(request, response){
 	var userId = request.body.userid
     var movieId = request.body.movieid
     ddb.deleteMovieByAdmin(userId, movieId)
-    ddb.deleteMovieIfEmpty(movieId, function(){
-        response.status(200)
-        response.render('admin.hbs', {error: "Rating deleted!"})
-    })
+    ddb.deleteMovieIfEmpty(movieId)
+    response.status(200)
+    response.status(200)
+    response.render('admin.hbs', {error: "Rating deleted!"})
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +107,7 @@ app.post("/create-movie", function(request, response){
                 console.log("in app.js " + movie_id)
                 newMovie.id = movie_id
                 ddb.createRating(request.session.user.id, movie_id, inputRating)
+                response.status(201)
                 response.redirect("/movies/"+movie_id)
             })
         }
@@ -110,6 +115,7 @@ app.post("/create-movie", function(request, response){
             console.log(row.movie_id)
             newMovie.id = row.movie_id
             ddb.createRating(request.session.user.id ,row.movie_id, inputRating)
+            response.status(201)
             response.redirect("/movies/"+row.movie_id)
 
         }
@@ -138,6 +144,7 @@ app.post("/create-user", function(request, response){
                 var newUser = {id: newId, username: newUsername, password: newPass, role: "limited" }
     
                 request.session.user = newUser
+                response.status(201)
                 response.redirect('/')
             })
         }
@@ -160,11 +167,14 @@ app.post("/log-user", function(request, response){
         if (returnValue == true) {
             
             ddb.logUser(inputUser, inputPass, function(err, role, userRows){
-                if (err)
+                if (err) {
+                    response.status(200)
                     response.render("log-user.hbs", {error: err})
+                }
                 else {
                     var newUser = {id: userRows.user_id, username: userRows.username, password: userRows.password, role: role}
                     request.session.user = newUser
+                    response.status(200)
                     response.redirect("/")
                 }
             })
@@ -226,6 +236,139 @@ app.get("/logout", function(request, response){
         response.redirect('/')
     })
     
+})
+
+/////// API ///////
+
+app.get("/api", function(request, response) {
+    
+})
+
+app.get("/api/movies", function(request, response) {
+    ddb.getAllMovies(function(movies){
+        response.status(200)
+        response.json(movies)
+    })
+})
+
+app.get("/api/movies/:id", function(request, response) {
+    ddb.getMovieById(request.params.id, function(movie, rating){        
+
+        if (movie.length == 0) {
+            response.status(404)
+            response.json(null)
+        }
+        else {
+            var ratingArray=[]
+            for (var i = 0; i < rating.length; i++)
+                ratingArray.push(rating[i].rating)
+    
+                var final = {
+                id: movie[0].id,
+                year: movie[0].year,
+                title: movie[0].title,
+                ratings: ratingArray
+            }
+            response.status(200)
+            response.json(final)
+        }
+    })
+})
+
+app.get("/api/login", function(request, response){
+    
+    response.status(200)
+})
+
+app.post("/api/tokens", function(request, response){
+    var usernameInput = request.body.username
+    var PassInput = request.body.password
+    
+    ddb.doesUserExist(usernameInput, function(doesExist){
+        if (doesExist == true) {
+            ddb.logUser(usernameInput, PassInput, function(err, role, user, tokenReturn){
+                if (err) {
+                    response.status(401)
+                    response.json(null)                    
+                }
+                else {
+                    var tokenJSON = {token: tokenReturn}
+                    response.status(201)
+                    response.json(tokenJSON)
+                }
+            })
+        }
+        else {
+            response.status(401)
+            response.json(null)
+        }
+    })
+})
+
+app.post("/api/ratings", function(request, response){
+    
+    var regex = /Token (.+)/
+    var authorizationHead = request.get("Authorization")
+    if (!authorizationHead) {
+            response.status(401)
+            response.json(null)        
+    }
+    var tokenRegex = authorizationHead.match(regex)
+    var token = tokenRegex[1]
+    console.log(token)
+    pw.checkToken(token, function(err){
+        if (err) {
+            response.status(401)
+            response.json(null)
+        }
+        else {
+            ddb.doesMovieExist(request.body.title, request.body.year,function(BoolValue, movie){
+                if (BoolValue == true) {
+                    ddb.createRating(request.body.userId, movie.id, request.body.rating)
+                    response.status(201)
+                    response.json(null)
+                }
+                else {
+                    var newMovie = {id: -1,
+                                    year: request.body.year,
+                                    title: request.body.title
+                                   }
+                    ddb.createMovie(newMovie, function(newId){
+                        ddb.createRating(request.body.userId, movie.id, request.body.rating)
+                        response.status(201)
+                        response.json(null)
+                    })
+                }
+            })
+        }
+    })
+})
+
+app.delete("/api/ratings", function(request, response){
+    var regex = /Token (.+)/
+    var authorizationHead = request.get("Authorization")
+    if (!authorizationHead) {
+            response.status(401)
+            response.json(null)        
+    }
+    else {
+        var tokenRegex = authorizationHead.match(regex)
+        var token = tokenRegex[1]
+        pw.checkToken(token, function(err){
+            if (err) {
+                response.status(401)
+                response.json(null)
+            }
+            else {
+                var movieId = request.query.movieId
+                var userId = request.query.userId
+                ddb.deleteRatingByUser(movieId, userId) 
+                ddb.deleteMovieIfEmpty(movieId)
+                response.status(204)
+                response.json(null)
+            }
+        })
+    }
 })
 
 app.listen(8000)
