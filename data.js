@@ -4,6 +4,15 @@ var secu = require('./administration.js')
 
 var db = new sqlite3.Database("./db/movie-friends.db")
 
+///////// SPARQL ////////
+
+var fetch = require('isomorphic-fetch')
+var SparlqHttp = require('sparql-http-client')
+SparlqHttp.fetch = fetch
+
+var endpoint = new SparlqHttp({endpointUrl: "http://dbpedia.org/sparql"})
+
+var pry = require('pryjs')
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////// GET ALL MOVIES ////////////////////////////////////////////////
@@ -29,11 +38,24 @@ exports.doesMovieExist = function (title, year, callback) {
 }
 
 exports.createMovie = function (newMovie, callback) {
-    db.all("SELECT * FROM movie", function (err, movies) {
-        console.log(movies.length)
-        newMovie.id = movies.length
-        db.run("INSERT INTO movie VALUES (?,?,?)", newMovie.id, newMovie.year, newMovie.title)
-        callback(newMovie.id)
+    getSparql(newMovie.title, function(result){
+        db.all("SELECT * FROM movie", function (err, movies) {
+            newMovie.id = movies.length
+            db.run("INSERT INTO movie VALUES (?,?,?,?,?,?,?)", newMovie.id, newMovie.year, newMovie.title, parseInt(result.results.bindings[0].runtime.value), result.results.bindings[0].director.value, result.results.bindings[0].actors.value, result.results.bindings[0].abstract.value)
+            callback(newMovie.id)
+        })
+    })
+}
+
+function getSparql(title,callback){
+    var query = 'PREFIX dbo: <http://dbpedia.org/ontology/> SELECT ?runtime ?movie ?abstract  (group_concat (DISTINCT ?directName;separator=", ") as ?director) (group_concat(DISTINCT ?actors;separator=", ") as ?actors) WHERE { ?movie rdf:type dbo:Film . ?movie rdfs:label "' + title + '"@en . ?movie dbo:runtime ?runtime . ?movie dbo:abstract ?abstract . ?movie dbo:director ?director . ?director dbo:birthName ?directName . ?movie dbo:starring ?actorlist . ?actorlist dbo:birthName ?actors . FILTER (lang(?abstract) = "en") } GROUP BY  ?abstract ?runtime ?movie'
+    
+    endpoint.selectQuery(query).then(function(response){
+        return (response.text())
+    }).then(function(result){
+        callback(JSON.parse(result))
+    }).catch(function(err){
+        console.log(err)
     })
 }
 
@@ -160,31 +182,3 @@ function getRoleById(id, callback) {
         }
     })
 }
-
-
-
-///////// SPARQL ////////
-
-/*
-var fetch = require('isomophic-fetch')
-var SparlqHttp = require('sparql-http-client')
-SparlqHttp.fetch = fetch
-
-var endpoint = new SparlqHttp({endpointUrl: "http://dbpedia.org/sparql"})
-
-var query =    `PREFIX dbo: <http://dbpedia.orf/ontology/>
-               SELECT ?runtime ?abstract WHERE {
-                <http://dbpedia.org/resource/Shrek> dbo:runtime ?runtime
-                
-                } `
-
-endpoint.selectQuery(query).then(function(response){
-    return response.json()
-}).then(function(result){
-    console.log(JSON.stringify(result, null, 2))
-})
-*/
-
-
-
-
