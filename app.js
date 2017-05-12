@@ -104,7 +104,6 @@ app.post("/create-movie", function(request, response){
     ddb.doesMovieExist(inputTitle, inputYear, function(returnValue, row){
         if (returnValue == false) {
             ddb.createMovie(newMovie, function(movie_id){
-                console.log("in app.js " + movie_id)
                 newMovie.id = movie_id
                 ddb.createRating(request.session.user.id, movie_id, inputRating)
                 response.status(201)
@@ -112,7 +111,6 @@ app.post("/create-movie", function(request, response){
             })
         }
         else {
-            console.log(row.movie_id)
             newMovie.id = row.movie_id
             ddb.createRating(request.session.user.id ,row.movie_id, inputRating)
             response.status(201)
@@ -240,10 +238,6 @@ app.get("/logout", function(request, response){
 
 /////// API ///////
 
-app.get("/api", function(request, response) {
-    
-})
-
 app.get("/api/movies", function(request, response) {
     ddb.getAllMovies(function(movies){
         response.status(200)
@@ -315,7 +309,6 @@ app.post("/api/ratings", function(request, response){
     }
     var tokenRegex = authorizationHead.match(regex)
     var token = tokenRegex[1]
-    console.log(token)
     pw.checkToken(token, function(err){
         if (err) {
             response.status(401)

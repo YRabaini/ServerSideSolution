@@ -2,8 +2,11 @@
 {{#if error}}
     <h2>{{error}}</h2>
 {{/if}}
-<ul>
-	{{#each rows}}
-		<li><a href="/movies/{{id}}">{{title}}</a></li>
-	{{/each}}
-</ul>
+
+<div vocab="http://shema.org/" typeof="Movie">
+    <ul>
+        {{#each rows}}
+            <li><a href="/movies/{{id}}"> <span property="name">{{title}}</span></a></li>
+        {{/each}}
+    </ul>
+</div>

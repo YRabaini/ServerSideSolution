@@ -43,8 +43,8 @@ else //!db
 
     // DB creation and filling is value doesn't exist (TO BE DONE)
 db.serialize(function(){
-    db.run("CREATE TABLE if not exists movie(id INT UNIQUE PRIMARY KEY, year INT, title TEXT)", function(err){
-        if (err)
+    db.run("CREATE TABLE if not exists movie(id INT UNIQUE PRIMARY KEY, year INT, title TEXT, runtime INTEGER, director TEXT, actors TEXT, abstract TEXT)", function(err){
+/*        if (err)
             console.log(err.message)
         else {
                 var fill = db.prepare("INSERT INTO movie VALUES (?,?,?)")
@@ -54,10 +54,11 @@ db.serialize(function(){
                         fill.run(movies[i].id, movies[i].year, movies[i].title)
                 }    
                 fill.finalize()
-            }
+            }*/
     })
     
     db.run("CREATE TABLE if not exists rating (movie_id INT, rating INT, user_id INT)", function(err) {
+/*
         if (err)
             console.log(err.message)
         else {
@@ -67,6 +68,7 @@ db.serialize(function(){
                         fillRating.run(ratings[i].movie_id, ratings[i].rating, ratings[i].user_id)
             fillRating.finalize()    
         }        
+*/
     })
     
        db.run("CREATE TABLE if not exists users (user_id INT UNIQUE PRIMARY KEY, username TEXT UNIQUE, password TEXT)", function(err) {

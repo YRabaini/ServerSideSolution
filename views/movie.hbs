@@ -1,14 +1,17 @@
 <h1>Movie</h1>
-{{#if movie}}
-	<div>Id: {{movie.id}}</div>
-	<div>Title: {{movie.title}}</div>
-	<div>Year: {{movie.year}}</div>
+<div vocab="http://shema.org/" typeof="Movie">
+    {{#if movie}}
+    <div>Id: {{movie.id}}</div>
+    <div property="name">Title: {{movie.title}}</div>
+    <div><img property="image" src="http://cdn24.paredro.com/wp-content/uploads/2014/11/shutterstock_187290782.jpg"/></div>
+    <div>Year: {{movie.year}}</div>
     <h2>Ratings</h2>
     <ul>
         {{#each rows}}
-                <li>{{this.rating}} </li>
+        <li>{{this.rating}} </li>
         {{/each}}
     </ul>
-{{else}}
-	<p>No movie with the given id exists.</p>
-{{/if}}
+    {{else}}
+    <p>No movie with the given id exists.</p>
+    {{/if}}
+</div>

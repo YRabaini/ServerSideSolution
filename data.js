@@ -1,6 +1,10 @@
 var sqlite3 = require('sqlite3')
 var secu = require('./administration.js')
+
+
 var db = new sqlite3.Database("./db/movie-friends.db")
+
+
     //////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////// GET ALL MOVIES ////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +64,7 @@ exports.getMovieAdmin = function (callback) {
         db.all("SELECT movie.title, movie.id, rating.rating, rating.user_id, users.user_id from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id", function (err, rows) {
             callback(rows)
         })
-    }
+}
     //////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////// DELETE RATING AND MOVIE /////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +77,7 @@ exports.deleteMovieIfEmpty = function (id) {
             if (rows.length == 0)
                 db.run("DELETE from movie where id=?", id)
         })
-    }
+}
 
 exports.deleteMovieByAdmin = function (userId, movieId) {
         db.run("DELETE FROM rating WHERE rating.movie_id=? AND rating.user_id=?", movieId, userId)
@@ -156,3 +160,31 @@ function getRoleById(id, callback) {
         }
     })
 }
+
+
+
+///////// SPARQL ////////
+
+/*
+var fetch = require('isomophic-fetch')
+var SparlqHttp = require('sparql-http-client')
+SparlqHttp.fetch = fetch
+
+var endpoint = new SparlqHttp({endpointUrl: "http://dbpedia.org/sparql"})
+
+var query =    `PREFIX dbo: <http://dbpedia.orf/ontology/>
+               SELECT ?runtime ?abstract WHERE {
+                <http://dbpedia.org/resource/Shrek> dbo:runtime ?runtime
+                
+                } `
+
+endpoint.selectQuery(query).then(function(response){
+    return response.json()
+}).then(function(result){
+    console.log(JSON.stringify(result, null, 2))
+})
+*/
+
+
+
+
