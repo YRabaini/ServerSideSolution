@@ -41,8 +41,14 @@ exports.createMovie = function (newMovie, callback) {
     getSparql(newMovie.title, function(result){
         db.all("SELECT * FROM movie", function (err, movies) {
             newMovie.id = movies.length
-            db.run("INSERT INTO movie VALUES (?,?,?,?,?,?,?)", newMovie.id, newMovie.year, newMovie.title, parseInt(result.results.bindings[0].runtime.value), result.results.bindings[0].director.value, result.results.bindings[0].actors.value, result.results.bindings[0].abstract.value)
-            callback(newMovie.id)
+            if (result.results.bindings.length != 0) {
+                db.run("INSERT INTO movie VALUES (?,?,?,?,?,?,?)", newMovie.id, newMovie.year, newMovie.title, parseInt(result.results.bindings[0].runtime.value), result.results.bindings[0].director.value, result.results.bindings[0].actors.value, result.results.bindings[0].abstract.value)
+                callback(newMovie.id)
+            }
+            else {
+                db.run("INSERT INTO movie VALUES (?,?,?,?,?,?,?)", newMovie.id, newMovie.year, newMovie.title, 0, "", "", "")
+                callback(newMovie.id)                
+            }
         })
     })
 }

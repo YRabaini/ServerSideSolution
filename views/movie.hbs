@@ -6,9 +6,9 @@
     <div><img property="image" src="http://cdn24.paredro.com/wp-content/uploads/2014/11/shutterstock_187290782.jpg"/></div>
     <div>Year: {{movie.year}}</div>
     <div>Runtime:{{movie.runtime}}</div>
-    <div>Actors:{{movie.actors}}</div>
-    <div>Directors:{{movie.director}}</div>
-    <div>Abstract:<p>{{movie.abstract}}</p></div>
+    <div property="actor">Actors:{{movie.actors}}</div>
+    <div property="director">Directors:{{movie.director}}</div>
+    <div>Abstract:<p property="about">{{movie.abstract}}</p></div>
     <h2>Ratings</h2>
     <ul>
         {{#each rows}}
