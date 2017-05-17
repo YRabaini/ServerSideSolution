@@ -148,10 +148,21 @@ exports.createUser = function (username, password, callback) {
     var pass = secu.hashPassword(password)
     db.all("select * from users", function (err, rows) {
         var newId = rows.length
-        db.run("INSERT INTO users VALUES (?,?,?)", newId, username, pass)
+        db.run("INSERT INTO users VALUES (?,?,?,?,?,?)", newId, username, pass, "", "", "")
         db.run("INSERT INTO roleMembers VALUES (?, ?)", newId, 1)
         db.run("INSERT INTO roleMembers VALUES (?, ?)", newId, 2)
         callback(newId, username, pass)
+    })
+}
+
+exports.updateUser = function(id, name, lastName, gender, callback) {
+    db.all("SELECT * FROM users WHERE users.user_id=?", id, function(err, rows){
+        if (err)
+            console.log(err.message)
+        else {
+            db.run("UPDATE users SET name=?, lastName=?, gender=? WHERE user_id=?", name, lastName, gender, id)
+            callback(rows[0])
+        }
     })
 }
 

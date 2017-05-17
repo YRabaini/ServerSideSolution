@@ -1,0 +1,23 @@
+<h1>Your account information</h1>
+{{#if error}}
+    <h2>{{error}}</h2>
+{{/if}}
+
+{{#if user}}
+    <div>
+        <p>Username: {{user.username}}</p>
+        <p>Name: {{user.name}}</p>
+        <p>Last Name: {{user.lastName}}</p>
+        <p>Gender: {{user.gender}}</p>
+    </div>
+{{else}}
+    <form action="/my_account" method="post">
+        <div>Name:  <input type="text" name="name" required></div>
+        <div>Last Name:  <input type="text" name="lastName" required></div>
+        <div>Gender:<br/> 
+            <input type="radio" name="gender" value="male" required> Male <br/>
+            <input type="radio" name="gender" value="female"> Female <br/>
+        </div>
+        <div><input type="submit" value="Update!"></div>
+    </form>
+{{/if}}

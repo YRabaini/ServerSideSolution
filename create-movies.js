@@ -43,43 +43,19 @@ else //!db
 
     // DB creation and filling is value doesn't exist (TO BE DONE)
 db.serialize(function(){
-    db.run("CREATE TABLE if not exists movie(id INT UNIQUE PRIMARY KEY, year INT, title TEXT, runtime INTEGER, director TEXT, actors TEXT, abstract TEXT)", function(err){
-/*        if (err)
-            console.log(err.message)
-        else {
-                var fill = db.prepare("INSERT INTO movie VALUES (?,?,?)")
-                                
-                for (i=0; i < movies.length ; i++) {
-                    if (movies[i].id != null && movies[i].year!= null && movies[i].title != null)
-                        fill.run(movies[i].id, movies[i].year, movies[i].title)
-                }    
-                fill.finalize()
-            }*/
-    })
+    db.run("CREATE TABLE if not exists movie(id INT UNIQUE PRIMARY KEY, year INT, title TEXT, runtime INTEGER, director TEXT, actors TEXT, abstract TEXT)", function(err){})
     
-    db.run("CREATE TABLE if not exists rating (movie_id INT, rating INT, user_id INT)", function(err) {
-/*
+    db.run("CREATE TABLE if not exists rating (movie_id INT, rating INT, user_id INT)", function(err) {})
+    
+       db.run("CREATE TABLE if not exists users (user_id INT UNIQUE PRIMARY KEY, username TEXT UNIQUE, password TEXT, name TEXT, lastName TEXT, gender TEXT)", function(err) {
         if (err)
             console.log(err.message)
         else {
-                var fillRating = db.prepare("INSERT INTO rating VALUES (?,?,?)")
-                // RAJOUTE VALUE USER_ID AFTER USER SESSION IS DONE
-                for (i=0; i < ratings.length ; i++)
-                        fillRating.run(ratings[i].movie_id, ratings[i].rating, ratings[i].user_id)
-            fillRating.finalize()    
-        }        
-*/
-    })
-    
-       db.run("CREATE TABLE if not exists users (user_id INT UNIQUE PRIMARY KEY, username TEXT UNIQUE, password TEXT)", function(err) {
-        if (err)
-            console.log(err.message)
-        else {
-                var fillUser = db.prepare("INSERT INTO users VALUES (?,?,?)")
+                var fillUser = db.prepare("INSERT INTO users VALUES (?,?,?,?,?,?)")
                 
                 for (i=0; i < users.length ; i++) {
                     if (users[i].user_id != null, users[i].username != null, users[i].password != null)
-                        fillUser.run(users[i].user_id, users[i].username, users[i].password)
+                        fillUser.run(users[i].user_id, users[i].username, users[i].password, "", "", "")
                 }
             fillUser.finalize()    
         }        

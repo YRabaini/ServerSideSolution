@@ -68,7 +68,7 @@ app.post("/movies/:id", function(request, response){
     var userId = request.session.user.id
     ddb.deleteRatingByUser(id, userId)
     ddb.deleteMovieIfEmpty(id)
-    response.status(200)
+    response.status(204)
     response.redirect("/my_page")
 })
 
@@ -79,8 +79,7 @@ app.post("/delete_rating", function(request, response){
     var movieId = request.body.movieid
     ddb.deleteMovieByAdmin(userId, movieId)
     ddb.deleteMovieIfEmpty(movieId)
-    response.status(200)
-    response.status(200)
+    response.status(204)
     response.render('admin.hbs', {error: "Rating deleted!"})
 })
 
@@ -102,7 +101,9 @@ app.post("/create-movie", function(request, response){
     var newMovie = {id: 0, title: inputTitle, year: inputYear}
     
     ddb.doesMovieExist(inputTitle, inputYear, function(returnValue, row){
-        if (returnValue == false) {
+        if (inputTitle.length > 200)
+            response.render("create-movie.hbs", {error: "Movie title is too long."})
+        else if (returnValue == false) {
             ddb.createMovie(newMovie, function(movie_id){
                 newMovie.id = movie_id
                 ddb.createRating(request.session.user.id, movie_id, inputRating)
@@ -133,9 +134,13 @@ app.post("/create-user", function(request, response){
     
     var inputUsername = request.body.username
     var inputPass = request.body.password
+    var passConfirm = request.body.passwordConfirm
+
     
     ddb.doesUserExist(inputUsername, function(returnValue){
-        if (returnValue == true)
+        if (passConfirm != inputPass)
+            response.render('create-user.hbs', {error: "Passwords don't match."})
+        else if (returnValue == true)
             response.render('create-user.hbs', {error: "User already exists."})
         else {
             ddb.createUser(inputUsername, inputPass, function(newId, newUsername, newPass) {
@@ -205,12 +210,42 @@ app.get("/user/:id", function(request, response){
 //////////////////////////////////////////////////////////////////// MY PAGE //////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-app.get("/my_page", function(request, response){
+app.get("/my_movies", function(request, response){
     var username = request.session.user.username
     ddb.getMovieUser(username, function(rows){
         response.status(200)
         response.render("my_page.hbs", {user: rows})        
     })
+})
+
+app.get("/my_account", function(request, response){
+    ddb.getUserById(request.session.user.id, function(user, rating){
+        if (user[0].name == "" && user[0].lastName == "" && user[0].gender == "") {
+            response.status(200)
+            response.render("my_account.hbs")
+        }
+        else {
+            console.log(user)
+            response.status(200)
+            response.render("my_account.hbs", {user: user[0]})
+        }
+    })
+})
+
+app.post("/my_account", function(request, response){
+    var name = request.body.name
+    var lastName = request.body.lastName
+    var gender = request.body.gender
+    
+    ddb.updateUser(request.session.user.id, name, lastName, gender, function(user){
+        response.status(200)
+        response.render("my_account.hbs", {user: user[0]})
+    })
+})
+
+app.get("/my_page", function(request, response){
+    response.status(200)
+    response.render("user_account.hbs")        
 })
 
 app.get("/admin", function(request, response){
@@ -233,7 +268,6 @@ app.get("/logout", function(request, response){
         response.status(200)
         response.redirect('/')
     })
-    
 })
 
 /////// API ///////
