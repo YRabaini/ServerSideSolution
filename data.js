@@ -132,6 +132,16 @@ exports.getUserById = function (id, callback) {
     })
 }
 
+exports.addFriend= function(friendId, id) {
+    db.run("INSERT INTO friends VALUES (?,?)", id, friendId)
+}
+
+exports.getFriendById = function(id, callback) {
+    db.all("SELECT distinct(users.username), friends.userId, friends.friendId from users, friends WHERE users.user_id=? and friends.friendId=?", id, function(err, rows){
+        callback(rows)
+    })
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////// USERS CREATION & LOG ///////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////

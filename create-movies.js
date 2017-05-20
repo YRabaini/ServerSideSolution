@@ -45,6 +45,8 @@ else //!db
 db.serialize(function(){
     db.run("CREATE TABLE if not exists movie(id INT UNIQUE PRIMARY KEY, year INT, title TEXT, runtime INTEGER, director TEXT, actors TEXT, abstract TEXT)", function(err){})
     
+    db.run("CREATE TABLE if not exists friends(userId INT, friendId INT)", function(err){})
+    
     db.run("CREATE TABLE if not exists rating (movie_id INT, rating INT, user_id INT)", function(err) {})
     
        db.run("CREATE TABLE if not exists users (user_id INT UNIQUE PRIMARY KEY, username TEXT UNIQUE, password TEXT, name TEXT, lastName TEXT, gender TEXT)", function(err) {

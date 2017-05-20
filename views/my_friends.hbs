@@ -1,0 +1,12 @@
+<h1>My friends</h1>
+{{#if error}}
+    <h2>{{error}}</h2>
+{{/if}}
+
+<div>
+    <ul>
+        {{#each friend}}
+            <li><a href="/user/{{friend.id}}">{{friend.username}}</span></a></li>
+        {{/each}}
+    </ul>
+</div>

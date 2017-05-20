@@ -199,11 +199,28 @@ app.get("/users", function(request, response){
 
 app.get("/user/:id", function(request, response){
     
+    var selfId = request.session.user.id
     var id = parseInt(request.params.id)
     ddb.getUserById(id, function(user, rating) {
-        response.status(200)
-        response.render("user.hbs", { user: user[0] , rating: rating})
+        
+        if (id == selfId) {
+            response.status(200)
+            response.redirect('/my_page')
+        }
+        else {
+            response.status(200)
+            response.render("user.hbs", { user: user[0] , rating: rating})            
+        }
     })
+})
+
+app.post("/user/:id", function(request, response){
+    var friendId = parseInt(request.body.   id)
+    var id = request.session.user.id
+    
+    ddb.addFriend(friendId, id)
+    response.status(201)
+    response.redirect('/')
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -240,6 +257,12 @@ app.post("/my_account", function(request, response){
     ddb.updateUser(request.session.user.id, name, lastName, gender, function(user){
         response.status(200)
         response.render("my_account.hbs", {user: user[0]})
+    })
+})
+
+app.get("/my_friends", function(request, response){
+    ddb.getFriendById(request.session.user.id, function(friends){
+        response.render("my_friends.hbs", {friend: friends})
     })
 })
 

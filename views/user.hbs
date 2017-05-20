@@ -1,8 +1,13 @@
 <h1>User</h1>
 {{#if user}}
-	<div>Id: {{user_id}}</div>
-	<div>username: {{username}}</div>
-	<div>pass: {{password}}</div>
+	<div>Id: {{user.user_id}}</div>
+	<div>username: {{user.username}}</div>
+
+    <form action="/user/:id" method="post">
+        <div><input type="hidden" name="id" value={{user.user_id}}></div>
+        <div><input type="submit" value="Become friends!"></div>
+    </form>
+
     <h2>Ratings</h2>
     <ul>
         {{#each rating}}
