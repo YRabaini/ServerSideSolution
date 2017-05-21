@@ -202,15 +202,21 @@ app.get("/user/:id", function(request, response){
     var selfId = request.session.user.id
     var id = parseInt(request.params.id)
     ddb.getUserById(id, function(user, rating) {
+        ddb.alreadyFriend(selfId, id, function(friend){
+            if (id == selfId) {
+                response.status(200)
+                response.redirect('/my_page')
+            }
+            if (friend.length == 0) {
+                    response.status(200)
+                    response.render("user.hbs", { user: user[0] , rating: rating})            
+            }
+            else {
+                response.status(200)
+                response.render("user.hbs", { user: user[0] , rating: rating, alreadyFriend: true})            
+            }
+        })
         
-        if (id == selfId) {
-            response.status(200)
-            response.redirect('/my_page')
-        }
-        else {
-            response.status(200)
-            response.render("user.hbs", { user: user[0] , rating: rating})            
-        }
     })
 })
 
@@ -220,7 +226,7 @@ app.post("/user/:id", function(request, response){
     
     ddb.addFriend(friendId, id)
     response.status(201)
-    response.redirect('/')
+    response.redirect('/my_friends')
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,8 +267,8 @@ app.post("/my_account", function(request, response){
 })
 
 app.get("/my_friends", function(request, response){
-    ddb.getFriendById(request.session.user.id, function(friends){
-        response.render("my_friends.hbs", {friend: friends})
+    ddb.getFriendById(request.session.user.id, function(friends, friendAdded){
+            response.render("my_friends.hbs", {friend: friends, friendAdded: friendAdded})
     })
 })
 
@@ -281,6 +287,25 @@ app.get("/admin", function(request, response){
             response.render("admin.hbs", {user: rows})
         })
 })
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////// FOAF /////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+app.get("/get_foaf", function(request, response) {
+  response.status(200)  
+  response.render("my_foaf.hbs")  
+})
+
+app.post("/get_foaf", function(request, response){
+    ddb.getUserById(request.session.user.id, function(user){
+        ddb.getFoaf(user[0], function(foafProfile){
+            response.status(201)
+            response.render("my_foaf.hbs", {foaf: foafProfile})
+        })
+    })
+})
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////// LOG USERS OUT ////////////////////////////////////////////////////////////////////////////////////////////

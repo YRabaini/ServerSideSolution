@@ -1,5 +1,6 @@
 var sqlite3 = require('sqlite3')
 var secu = require('./administration.js')
+var N3 = require('n3')
 
 
 var db = new sqlite3.Database("./db/movie-friends.db")
@@ -132,15 +133,24 @@ exports.getUserById = function (id, callback) {
     })
 }
 
+exports.alreadyFriend = function(idLogged, idToBeFriend, callback) {
+    db.all("SELECT * from friends where friends.userId=? and friends.friendId=?", idLogged, idToBeFriend, function(err, rows){
+        callback(rows)
+    })
+}
+
 exports.addFriend= function(friendId, id) {
     db.run("INSERT INTO friends VALUES (?,?)", id, friendId)
 }
 
 exports.getFriendById = function(id, callback) {
-    db.all("SELECT distinct(users.username), friends.userId, friends.friendId from users, friends WHERE users.user_id=? and friends.friendId=?", id, function(err, rows){
-        callback(rows)
+    db.all("SELECT users.username as username, users.user_id FROM friends INNER JOIN users ON friends.friendId = users.user_id WHERE friends.userId =?", id, function(err, rows){
+        db.all("SELECT users.username as username, users.user_id FROM friends INNER JOIN users ON friends.userId = users.user_id WHERE friends.friendId =?", id, function(err, rows2){
+            callback(rows, rows2)
+        })
     })
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////// USERS CREATION & LOG ///////////////////////////////////////////
@@ -196,6 +206,41 @@ exports.logUser = function (username, password, callback, token) {
             else
                 callback("Password is invalid", "", null, null)
         }
+    })
+}
+
+exports.getFoaf = function(user, callback){
+    db.all("SELECT friendId FROM friends WHERE userId=?", user.user_id, function(err, rows){
+        var writer = N3.Writer({prefixes: {foaf: 'http://xmlns.com/foaf/0.1/'}})
+        
+        if (user.name != "" && user.lastName != "") {
+            writer.addTriple({
+                subject: 'http://localhost:8000/user/'+user.user_id,
+                predicate: 'foaf:name',
+                object: user.name + " " + user.lastName
+            })
+        }
+        else {
+            writer.addTriple({
+                subject: 'http://localhost:8000/user/'+user.user_id,
+                predicate: 'foaf:name',
+                object: user.username
+            })        
+        }
+
+        for (var i = 0; i < rows.length ; i++){
+            var predicate = 'http://localhost:8000/user/' + rows[i].friendId
+            var subject = 'http://localhost:8000/user/' + user.user_id
+            console.log(predicate)
+            console.log(subject)
+            writer.addTriple(subject,
+                             'foaf:knows',
+                             predicate)
+        }
+
+        writer.end(function(error, profile){
+            callback(profile)
+        })
     })
 }
 

@@ -4,9 +4,19 @@
 {{/if}}
 
 <div>
+    <h1>Friends that you added</h1>
     <ul>
         {{#each friend}}
-            <li><a href="/user/{{friend.id}}">{{friend.username}}</span></a></li>
+            <li><a href="/user/{{user_id}}">{{username}}</span></a></li>
+        {{/each}}
+    </ul>
+</div>
+
+<div>
+    <h1>Friends that added you</h1>
+    <ul>
+        {{#each friendAdded}}
+            <li><a href="/user/{{user_id}}">{{username}}</span></a></li>
         {{/each}}
     </ul>
 </div>

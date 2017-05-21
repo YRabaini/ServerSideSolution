@@ -3,11 +3,15 @@
 	<div>Id: {{user.user_id}}</div>
 	<div>username: {{user.username}}</div>
 
+    {{#if alreadyFriend}}
+    <h3>You are already friend with {{user.username}}</h3>
+    {{else}}
     <form action="/user/:id" method="post">
         <div><input type="hidden" name="id" value={{user.user_id}}></div>
         <div><input type="submit" value="Become friends!"></div>
     </form>
-
+    {{/if}}
+    
     <h2>Ratings</h2>
     <ul>
         {{#each rating}}
