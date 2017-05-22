@@ -10,12 +10,6 @@
         <p>Last Name: {{user.lastName}}</p>
         <p>Gender: {{user.gender}}</p>
     </div>
-    <div><br/>
-    <form action="/delete_account" method="post">
-        <div><input type="submit" value="Delete my account"></div>
-    </form>
-        
-    </div>
 {{else}}
     <form action="/my_account" method="post">
         <div>Name:  <input type="text" name="name" required></div>
@@ -27,3 +21,9 @@
         <div><input type="submit" value="Update!"></div>
     </form>
 {{/if}}
+
+<div>
+    <form action="/delete_account" method="post">
+        <div><input type="submit" value="Delete my account"></div>
+    </form>
+</div>
