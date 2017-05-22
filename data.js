@@ -1,6 +1,7 @@
 var sqlite3 = require('sqlite3')
 var secu = require('./administration.js')
 var N3 = require('n3')
+var js2xmlparser = require("js2xmlparser")
 
 
 var db = new sqlite3.Database("./db/movie-friends.db")
@@ -250,6 +251,23 @@ exports.getFoaf = function(user, callback){
         })
     })
 }
+
+/// API ///
+
+exports.createXMLArray = function(arrayObject, name, callback){
+    var XMLToReturn = null
+    for (var i=0; i < arrayObject.length; i++){
+        XMLToReturn += js2xmlparser.parse(name, arrayObject[i])
+    }
+    callback(XMLToReturn)
+}
+
+exports.createXMLObject = function(Object, name, callback){
+    var XMLToReturn = null  
+    XMLToReturn = js2xmlparser.parse(name, Object)
+    callback(XMLToReturn)
+}
+
 
 function getRoleById(id, callback) {
     db.all("SELECT role_id FROM roleMembers WHERE memberId=?", id, function (err, rows) {

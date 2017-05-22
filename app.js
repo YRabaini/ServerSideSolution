@@ -114,10 +114,11 @@ app.post("/create-movie", function(request, response){
             })
         }
         else {
-            newMovie.id = row.movie_id
-            ddb.createRating(request.session.user.id ,row.movie_id, inputRating)
+            console.log(row.id)
+            newMovie.id = row.id
+            ddb.createRating(request.session.user.id ,row.id, inputRating)
             response.status(201)
-            response.redirect("/movies/"+row.movie_id)
+            response.redirect("/movies/"+row.id)
 
         }
     })	
@@ -341,18 +342,30 @@ app.post("/delete_account", function(request, response){
 /////// API ///////
 
 app.get("/api/movies", function(request, response) {
+    var contentType = request.headers['content-type']
+    
     ddb.getAllMovies(function(movies){
-        response.status(200)
-        response.json(movies)
+        if (contentType == "application/xml") {
+            ddb.createXMLArray(movies, "Movie", function(xmlMovies){
+                response.status(200)
+                response.send(xmlMovies)
+            })
+        }
+        else {
+            response.status(200)
+            response.json(movies)
+        }
     })
 })
 
 app.get("/api/movies/:id", function(request, response) {
+    var contentType = request.headers['content-type']
+
     ddb.getMovieById(request.params.id, function(movie, rating){        
 
         if (movie.length == 0) {
             response.status(404)
-            response.json(null)
+            response.send(null)
         }
         else {
             var ratingArray=[]
@@ -365,27 +378,36 @@ app.get("/api/movies/:id", function(request, response) {
                 title: movie[0].title,
                 ratings: ratingArray
             }
-            response.status(200)
-            response.json(final)
+            if (contentType=="application/xml") {
+                var array=[]
+                array.push(final)
+                ddb.createXMLObject(final, "Movie", function(movie){
+                    response.status(200)
+                    response.send(movie) 
+                })
+            }
+            else {
+                response.status(200)
+                response.json(final)
+            }
         }
     })
 })
 
 app.get("/api/login", function(request, response){
-    
     response.status(200)
 })
 
 app.post("/api/tokens", function(request, response){
     var usernameInput = request.body.username
     var PassInput = request.body.password
-    
+
     ddb.doesUserExist(usernameInput, function(doesExist){
         if (doesExist == true) {
             ddb.logUser(usernameInput, PassInput, function(err, role, user, tokenReturn){
                 if (err) {
                     response.status(401)
-                    response.json(null)                    
+                    response.send(null)                    
                 }
                 else {
                     var tokenJSON = {token: tokenReturn}
@@ -396,7 +418,7 @@ app.post("/api/tokens", function(request, response){
         }
         else {
             response.status(401)
-            response.json(null)
+            response.send(null)
         }
     })
 })
