@@ -89,6 +89,7 @@ exports.getMovieUser = function (username, callback) {
         callback(rows)
     })
 }
+
 exports.getMovieAdmin = function (callback) {
         db.all("SELECT movie.title, movie.id, rating.rating, rating.user_id, users.user_id from movie, rating, users WHERE movie.id = rating.movie_id AND users.user_id = rating.user_id", function (err, rows) {
             callback(rows)
@@ -186,6 +187,14 @@ exports.updateUser = function(id, name, lastName, gender, callback) {
     })
 }
 
+exports.deleteUser = function(id, callback) {
+    db.run("DELETE FROM users WHERE user_id=?", id)
+}
+
+exports.deleteFriend = function(id) {
+    db.run("DELETE FROM friends WHERE userId=?", id)
+}
+
 exports.logUser = function (username, password, callback, token) {
     db.all("SELECT * FROM users WHERE users.username=?", username, function (err, userRows) {
         if (err)
@@ -233,9 +242,7 @@ exports.getFoaf = function(user, callback){
             var subject = 'http://localhost:8000/user/' + user.user_id
             console.log(predicate)
             console.log(subject)
-            writer.addTriple(subject,
-                             'foaf:knows',
-                             predicate)
+            writer.addTriple(subject, 'foaf:knows', predicate)
         }
 
         writer.end(function(error, profile){

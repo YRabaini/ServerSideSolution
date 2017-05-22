@@ -58,6 +58,8 @@ app.get("/movies/:id", function(request, response){
 	var id = parseInt(request.params.id)
     // New way to do it
     ddb.getMovieById(id, function(movie, rating) {
+        if (movie.length == 0)
+            response.status(404).send("Error 404: movie doesn't exist")
         response.status(200)
         response.render('movie', {movie: movie[0], rows: rating})
     })
@@ -202,6 +204,8 @@ app.get("/user/:id", function(request, response){
     var selfId = request.session.user.id
     var id = parseInt(request.params.id)
     ddb.getUserById(id, function(user, rating) {
+        if (user.length == 0)
+            response.status(404).send("Error 404: user doesn't exist.")
         ddb.alreadyFriend(selfId, id, function(friend){
             if (id == selfId) {
                 response.status(200)
@@ -313,8 +317,24 @@ app.post("/get_foaf", function(request, response){
 
 app.get("/logout", function(request, response){
     request.session.destroy(function(){
-        response.status(200)
+        response.status(204)
         response.redirect('/')
+    })
+})
+
+app.post("/delete_account", function(request, response){
+    var username = request.session.user.username
+    ddb.getMovieUser(username, function(rows){
+        for (var i = 0; i < rows.length ; i++){
+            ddb.deleteRatingByUser(rows[i].id, rows[i].user_id)
+            ddb.deleteMovieIfEmpty(rows[i].id)
+        }
+        ddb.deleteFriend(request.session.user.id)
+        ddb.deleteUser(request.session.user.id)
+        request.session.destroy(function(){
+            response.status(204)
+            response.redirect('/')
+        })  
     })
 })
 
