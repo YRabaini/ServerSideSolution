@@ -14,6 +14,19 @@ var pry = require('pryjs')
     eval(pry.it)
 */
 
+///////////////////////////////////// TO DO //////////////////////////////////////
+/*
+    - Pagination
+    - Dynamic salt (Yanice only)
+    - Limit the number of login attempts + timeouts
+    - Cross site forgery request
+    - Assigning new roles (yanice only)
+    - Change password role
+    - Report
+*/
+///////////////////////////////////////////////////////////////////////////////////
+
+
 
 var app = express()
 
@@ -60,8 +73,11 @@ app.get("/movies/:id", function(request, response){
     ddb.getMovieById(id, function(movie, rating) {
         if (movie.length == 0)
             response.status(404).send("Error 404: movie doesn't exist")
+        else {
+            
         response.status(200)
         response.render('movie', {movie: movie[0], rows: rating})
+        }
     })
 })
 
@@ -77,6 +93,8 @@ app.post("/movies/:id", function(request, response){
 // DELETE BY ADMIN
 
 app.post("/delete_rating", function(request, response){
+    if (request.session.user.role != "admin")
+        response.status(401).send("Error 401: unauthorized")
 	var userId = request.body.userid
     var movieId = request.body.movieid
     ddb.deleteMovieByAdmin(userId, movieId)

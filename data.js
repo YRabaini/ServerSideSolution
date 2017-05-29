@@ -256,9 +256,9 @@ exports.getFoaf = function(user, callback){
 
 exports.createXMLArray = function(arrayObject, name, callback){
     var XMLToReturn = null
-    for (var i=0; i < arrayObject.length; i++){
-        XMLToReturn += js2xmlparser.parse(name, arrayObject[i])
-    }
+
+    var object = {movie: arrayObject}
+    XMLToReturn = js2xmlparser.parse(name, object)
     callback(XMLToReturn)
 }
 
