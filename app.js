@@ -7,36 +7,20 @@ var ddb = require('./data.js')
 var pw = require('./administration.js')
 var json = require('jsonwebtoken')
 
-// DEBUG
-
 /*
 var pry = require('pryjs')
     eval(pry.it)
 */
 
-///////////////////////////////////// TO DO //////////////////////////////////////
-/*
-    - Pagination
-    - Dynamic salt (Yanice only)
-    - Limit the number of login attempts + timeouts
-    - Cross site forgery request
-    - Assigning new roles (yanice only)
-    - Change password role
-    - Report
-*/
-///////////////////////////////////////////////////////////////////////////////////
-
 
 
 var app = express()
 
-// This middleware enables us to use request.body to read data from forms with
-// method="POST".
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}))
 app.set('view engine', 'hbs')
 
-///// CHUNK CODE SESSION
+
 app.use(session({
     resave: false,
     saveUninitialized: true,
@@ -48,8 +32,6 @@ app.use(function(request, response, next) {
     response.locals.session = request.session.user
     next()
 })
-
-///////////////
 
 app.get("/", function(request, response){
     response.status(200)

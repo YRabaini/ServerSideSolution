@@ -3,6 +3,7 @@
     <form action="/movies/{{id}}" method="post">
 	   <div><a href="/movies/{{id}}">{{title}}</a></div>
 	   <div>Rating: {{rating}}</div>
+        <input type="hidden" name="_csrf" value="{{csrfToken}}">
 	   <div><input type="submit" value="Delete!"></div>
     </form>
 
